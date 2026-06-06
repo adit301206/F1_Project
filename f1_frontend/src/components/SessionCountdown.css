@@ -1,0 +1,142 @@
+/* SessionCountdown.css */
+
+.countdown-card {
+  background: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.countdown-card:hover {
+  border-color: rgba(0, 245, 212, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 245, 212, 0.05);
+}
+
+.countdown-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #ff1801;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ff1801, 0 0 20px #ff1801;
+  animation: pulseDot 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+    box-shadow: 0 0 4px #ff1801;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+    box-shadow: 0 0 12px #ff1801, 0 0 20px #ff1801;
+  }
+}
+
+.session-status-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.session-title {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.timer-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.time-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60px;
+}
+
+.time-digits {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #00f5d4;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 12px rgba(0, 245, 212, 0.4);
+}
+
+.text-red {
+  color: #ff1801;
+  text-shadow: 0 0 12px rgba(255, 24, 1, 0.5);
+}
+
+.time-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  margin-top: 0.4rem;
+  text-transform: uppercase;
+}
+
+.time-divider {
+  font-family: ui-monospace, monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 1.25rem;
+  animation: blinkDivider 1s infinite step-end;
+}
+
+@keyframes blinkDivider {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.pit-lane-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.status-label {
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.status-val {
+  font-weight: 800;
+  color: #00f5d4;
+}

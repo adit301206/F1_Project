@@ -1,74 +1,115 @@
 import { useState, useEffect } from 'react';
+import TrackMap from './components/TrackMap';
+import SessionCountdown from './components/SessionCountdown';
 import './App.css';
 
 function App() {
   const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [driversLoading, setDriversLoading] = useState(true);
+  const [driversError, setDriversError] = useState(null);
+  const [circuitId, setCircuitId] = useState('monaco');
 
   useEffect(() => {
-    // Fetch directly from your newly built Django API endpoint
+    setDriversLoading(true);
     fetch('http://127.0.0.1:8000/api/drivers/')
       .then((response) => {
-        if (!response.ok) {
-          throw new Error('Paddock link failed. Check if Django server is down!');
-        }
+        if (!response.ok) throw new Error('Paddock connection dropped. Verify Django backend.');
         return response.json();
       })
       .then((data) => {
         setDrivers(data);
-        setLoading(false);
+        setDriversLoading(false);
       })
       .catch((err) => {
-        setError(err.message);
-        setLoading(false);
+        setDriversError(err.message);
+        setDriversLoading(false);
       });
   }, []);
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
-        <p>Warming up tire blankets... 🏎️💨</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="error-screen">🛑 Engine Blowout: {error}</div>;
-  }
-
   return (
-    <div className="app-container">
-      <header className="f1-header">
-        <h1>🏁 F1 Paddock Hub</h1>
-        <p>Live Driver Lineup synced via Django REST Framework</p>
+    <div className="paddock-canvas">
+      
+      {/* Centralized Telemetry Hero Block */}
+      <header className="centralized-telemetry-hero">
+        <div className="broadcast-headline-block">
+          <span className="live-pill">● LIVE TELEMETRY FEED</span>
+          
+          <h1 className="main-paddock-title">
+            <span className="flag-icon">🏁</span> PADDOCK TELEMETRY
+          </h1>
+          
+          <p className="main-paddock-subtitle">
+            Real-time Formula 1 racing insights and track telemetry synced with Django backend
+          </p>
+        </div>
+
+        {/* Dynamic Circuit Selector Tabs */}
+        <div className="telemetry-controls">
+          <div className="circuit-tabs">
+            <button 
+              className={`tab-btn ${circuitId === 'monaco' ? 'active' : ''}`}
+              onClick={() => setCircuitId('monaco')}
+            >
+              🇲🇨 MONACO GP
+            </button>
+            <button 
+              className={`tab-btn ${circuitId === 'silverstone' ? 'active' : ''}`}
+              onClick={() => setCircuitId('silverstone')}
+            >
+              🇬🇧 SILVERSTONE GP
+            </button>
+          </div>
+        </div>
+
+        {/* Large Multi-color Central Circuit Showcase Module */}
+        <div className="showcase-stage">
+          <TrackMap circuitId={circuitId} />
+        </div>
       </header>
 
-      <div className="driver-grid">
-        {drivers.map((driver) => (
-          <div 
-            key={driver.number} 
-            className="driver-card"
-            style={{ borderLeft: `6px solid ${driver.team_color}` }}
-          >
-            {/* Massive background number for that premium sports look */}
-            <div className="driver-number-bg">{driver.number}</div>
-            
-            <div className="driver-card-content">
-              <span className="driver-number-badge" style={{ backgroundColor: driver.team_color }}>
-                #{driver.number}
-              </span>
-              <div className="driver-details">
-                <h2>
-                  {driver.name} <span className="abbrev">({driver.abbreviation})</span>
-                </h2>
-                <p className="team-name">{driver.team}</p>
-              </div>
+      {/* Main Structural Grid Section Deck */}
+      <main className="main-paddock-content">
+        
+        {/* Dynamic Countdown Component Segment */}
+        <section className="countdown-section-wrapper">
+          <SessionCountdown circuitId={circuitId} />
+        </section>
+
+        {/* Driver Lineup Cluster Grid */}
+        <section className="drivers-sectionbox">
+          <h2 className="paddock-section-title">Official Driver Grid Lineup</h2>
+          
+          {driversLoading ? (
+            <div className="drivers-loading">
+              <div className="spinner-glow"></div>
+              <p>Warming up tire blankets...</p>
             </div>
-          </div>
-        ))}
-      </div>
+          ) : driversError ? (
+            <div className="drivers-error">🛑 Engine Blowout: {driversError}</div>
+          ) : (
+            <div className="driver-grid">
+              {drivers.map((driver) => (
+                <div 
+                  key={driver.number} 
+                  className="driver-card"
+                  style={{ '--team-color': driver.team_color }}
+                >
+                  <div className="driver-number-bg">{driver.number}</div>
+                  <div className="driver-inner-content">
+                    <span className="driver-number-badge" style={{ backgroundColor: driver.team_color }}>
+                      #{driver.number}
+                    </span>
+                    <div className="driver-details">
+                      <h2>{driver.name} <span className="abbrev">({driver.abbreviation})</span></h2>
+                      <p className="team-name">{driver.team}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }

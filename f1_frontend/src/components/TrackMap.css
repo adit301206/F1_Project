@@ -1,0 +1,169 @@
+/* TrackMap.css: Real 3D Space Matrices and Perspectives */
+
+.telemetry-showcase-container-3d {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  min-height: 650px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Central Overlay Typography Node - Floating completely clean of rotation */
+.absolute-center-label-3d {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 50; /* Floats high above the rotating 3D track path line */
+  pointer-events: none;
+  width: 100%;
+}
+
+.ambient-tag-3d {
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  color: #475569;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.core-destination-text-3d {
+  font-size: clamp(3.5rem, 11vw, 8.5rem); /* Cinematographically upscaled name text */
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  margin: 0;
+  color: #ffffff;
+  text-shadow: 
+    0 0 50px #060a14,
+    0 15px 35px rgba(0, 0, 0, 0.95);
+}
+
+/* 3D Viewport Box Wrapper Setup */
+.stage-3d-viewport {
+  width: 100%;
+  max-width: 1100px; /* Expanded spatial footprint */
+  height: 600px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1400px; /* Initializes 3D projection plane over container footprint */
+  overflow: visible;
+}
+
+/* The Real 3D Orbital Canvas Engine Container */
+.orbiting-3d-hologram {
+  width: 100%;
+  max-width: 900px; /* Massive circuit size scaling */
+  height: auto;
+  transform-style: preserve-3d;
+  /* Tilts map backward along X-axis, sets off active dynamic spin along Z-axis */
+  animation: smooth-paddock-3d-spin 40s linear infinite;
+  z-index: 5;
+}
+
+@keyframes smooth-paddock-3d-spin {
+  0% {
+    transform: rotateX(60deg) rotateY(-3deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(60deg) rotateY(-3deg) rotateZ(360deg);
+  }
+}
+
+.circuit-vector-fluid-huge-3d {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Base Extrusion Track Layout Outlines */
+.vector-base-track-3d {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Layer 1: Dark Ground Shadow Drop */
+.vector-base-track-3d.shadow-layer {
+  stroke: rgba(0, 0, 0, 0.9);
+  stroke-width: 26;
+  transform: translateZ(-40px); /* Pushes down down deep into Z depth */
+  filter: blur(14px);
+}
+
+/* Layer 2: Extruded Core Wall Edge thickness layer */
+.vector-base-track-3d.extrusion-layer {
+  stroke: rgba(30, 41, 59, 0.5);
+  stroke-width: 18;
+  transform: translateZ(-18px); /* Intermediate structural thickness tier */
+}
+
+/* Layer 3: Main Glowing Multi-Color Top Neon Core */
+.vector-neon-core-3d {
+  fill: none;
+  stroke: url(#velocity-gradient-3d); /* Multi-color telemetry mapping */
+  stroke-width: 7.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: url(#neon-glow-filter-3d);
+  transform: translateZ(12px); /* Extrudes line high off baseline mesh floor */
+  animation: drawTrack 3s ease-out forwards;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+}
+
+@keyframes drawTrack {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.vector-neon-core-3d:hover {
+  stroke-width: 9.5;
+  cursor: pointer;
+}
+
+/* Premium Hologram Grid Line Target Floor Plate */
+.paddock-floor-grid {
+  position: absolute;
+  width: 850px;
+  height: 850px;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 45px 45px;
+  background-position: center center;
+  transform: rotateX(75deg) translateY(60px);
+  z-index: 1;
+  pointer-events: none;
+  mask-image: radial-gradient(circle, rgba(0,0,0,1) 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 30%, transparent 75%);
+}
+
+.track-skeleton {
+  height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #475569;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.track-error {
+  height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ef4444;
+  font-weight: 700;
+}

@@ -1,108 +1,201 @@
+/* App.css: Cleared Side Borders & Expanded Showcase Stage to handle giant 3D bounds */
+
 :root {
-  background-color: #080c14;
+  background-color: #060a14;
   color: #f8fafc;
   font-family: system-ui, -apple-system, sans-serif;
+  --card-bg: rgba(11, 17, 32, 0.7);
+  --border-color: rgba(255, 255, 255, 0.05);
 }
 
 body {
   margin: 0;
   padding: 0;
+  border: none !important; /* Erases bounding layout lines completely */
+  background-color: #060a14;
 }
 
-.app-container {
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 3rem 1.5rem;
-}
-
-.f1-header {
-  text-align: center;
-  margin-bottom: 4rem;
-  border-bottom: 2px solid #1e293b;
-  padding-bottom: 2rem;
-}
-
-.f1-header h1 {
-  font-size: 3rem;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  text-transform: uppercase;
-  margin: 0 0 0.5rem 0;
-  background: linear-gradient(to right, #ff1801, #ff7300);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.f1-header p {
-  color: #94a3b8;
-  font-size: 1.1rem;
+.paddock-canvas {
+  width: 100%;
+  max-width: 100%; /* Removes rigid layout boxing constraints */
   margin: 0;
+  padding: 4rem max(2rem, 5vw); /* Fluid safe responsive padding tracking */
+  box-sizing: border-box;
+  border: none !important;
+  box-shadow: none !important;
 }
 
+.centralized-telemetry-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.broadcast-headline-block {
+  margin-bottom: 3rem; /* Generous gap above upscaled circuit canvas */
+  width: 100%;
+}
+
+.live-pill {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  display: inline-block;
+  margin-bottom: 2rem;
+}
+
+.main-paddock-title {
+  font-size: clamp(2.5rem, 6vw, 4.2rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.5rem 0; /* Distinct spacing beneath main title text */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.flag-icon {
+  display: inline-block;
+  line-height: 1;
+}
+
+.main-paddock-subtitle {
+  color: #475569;
+  font-size: 1.25rem;
+  max-width: 750px;
+  margin: 0 auto;
+  line-height: 1.7; /* Expanded line-height for clean layout reading */
+}
+
+.showcase-stage {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  margin-top: 1rem;
+  height: 650px; /* Expanded viewport height box to map upscaled 3D render stage */
+}
+
+/* Controls & Selection Strip */
+.telemetry-controls {
+  margin-bottom: 1rem;
+  z-index: 10;
+}
+
+.circuit-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.3rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.05em;
+}
+
+.tab-btn:hover { color: #f8fafc; }
+.tab-btn.active {
+  background: rgba(0, 242, 254, 0.1);
+  color: #00f2fe;
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  text-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+
+.main-paddock-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.paddock-section-title {
+  font-size: 2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  margin-bottom: 2.5rem;
+  color: #ffffff;
+  border-left: 5px solid #ff1801;
+  padding-left: 1rem;
+}
+
+/* Driver Lineup Grid */
 .driver-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
 }
 
 .driver-card {
-  background-color: #111827;
-  border-radius: 12px;
-  padding: 1.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 1.7rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  border: 1px solid #1f2937;
+  border-left: 6px solid var(--team-color);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
 }
 
 .driver-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
-  border-color: #374151;
+  transform: translateY(-8px);
+  border-color: var(--team-color);
 }
 
-.driver-card-content {
+.driver-inner-content {
+  position: relative;
+  z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  z-index: 2;
-  position: relative;
+  gap: 1.25rem;
 }
 
 .driver-number-badge {
   align-self: flex-start;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  padding: 0.25rem 0.85rem;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 800;
+  border-radius: 20px;
   color: #000;
 }
 
 .driver-details h2 {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
   margin: 0 0 0.35rem 0;
-  letter-spacing: -0.02em;
+  color: #fff;
 }
 
-.abbrev {
-  color: #4b5563;
-  font-size: 1rem;
-}
+.abbrev { color: #334155; }
+.team-name { color: #94a3b8; margin: 0; font-size: 0.95rem; }
 
-.team-name {
-  color: #9ca3af;
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-/* Slick italic background number layout */
 .driver-number-bg {
   font-size: 6.5rem;
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.015);
   position: absolute;
   right: -0.5rem;
   bottom: -1.5rem;
@@ -111,36 +204,13 @@ body {
   user-select: none;
 }
 
-.loading-screen {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #080c14;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 24, 1, 0.1);
-  border-top: 4px solid #ff1801;
+.drivers-loading { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 4rem 0; }
+.spinner-glow {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 24, 1, 0.1);
+  border-top: 3px solid #ff1801;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
 }
-
-@animation spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-screen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: #ef4444;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
