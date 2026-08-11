@@ -1,13 +1,66 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion, useScroll } from 'framer-motion';
-import { Radio, Activity, Timer, ChevronDown, Flag } from 'lucide-react';
+import { Radio, Activity, Timer, ChevronDown, Flag, Database, RefreshCw, Cpu, Award } from 'lucide-react';
 import CinematicTrackScene from '@/components/CinematicTrackScene';
+import TrackCanvas3D from '@/components/TrackCanvas3D';
+import { fetchCircuitData, fetchDriversData } from '@/lib/api';
 
 export default function Home() {
   const containerRef = useRef(null);
   const scrollProgressRef = useRef(0);
+
+  // State for Django API Integration
+  const [selectedCircuit, setSelectedCircuit] = useState('monaco');
+  const [circuitData, setCircuitData] = useState(null);
+  const [drivers, setDrivers] = useState([]);
+  const [loadingCircuit, setLoadingCircuit] = useState(true);
+  const [loadingDrivers, setLoadingDrivers] = useState(true);
+  const [isApiFallback, setIsApiFallback] = useState(false);
+
+  // Fetch circuit data from Django
+  useEffect(() => {
+    let active = true;
+    setLoadingCircuit(true);
+    fetchCircuitData(selectedCircuit)
+      .then((data) => {
+        if (active) {
+          setCircuitData(data);
+          setIsApiFallback(data.isFallback || false);
+          setLoadingCircuit(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setLoadingCircuit(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedCircuit]);
+
+  // Fetch driver data from Django
+  useEffect(() => {
+    let active = true;
+    setLoadingDrivers(true);
+    fetchDriversData()
+      .then((data) => {
+        if (active) {
+          setDrivers(data);
+          setLoadingDrivers(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setLoadingDrivers(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Framer Motion Scroll Listener
   const { scrollYProgress } = useScroll({
@@ -15,7 +68,7 @@ export default function Home() {
     offset: ['start start', 'end end'],
   });
 
-  // Continuously sync scroll progress value to the 3D Canvas ref without causing React re-renders
+  // Sync scroll progress value to the 3D Canvas ref without causing React re-renders
   useEffect(() => {
     if (scrollYProgress.on) {
       return scrollYProgress.on('change', (latest) => {
@@ -55,7 +108,7 @@ export default function Home() {
 
       {/* 2. FIXED 3D CANVAS BACKGROUND CONTAINER */}
       <div className="fixed inset-0 z-0 w-full h-screen">
-        <CinematicTrackScene scrollProgress={scrollProgressRef} trackName="MONACO" />
+        <CinematicTrackScene scrollProgress={scrollProgressRef} trackName={selectedCircuit.toUpperCase()} />
       </div>
 
       {/* 3. SCROLLABLE CONTENT OVERLAY STACK */}
@@ -91,56 +144,142 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* SECTION 2: TELEMETRY HUD OVERLAY (Revealed on Scroll) */}
-        <section id="telemetry" className="h-screen flex items-center justify-start px-8 md:px-20 pointer-events-none">
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ margin: "-20%" }}
-            className="pointer-events-auto max-w-md bg-slate-950/80 backdrop-blur-xl border border-slate-800/90 p-6 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.9)] space-y-4"
-          >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-xs font-mono text-cyan-400 font-bold flex items-center gap-2">
-                <Activity className="w-4 h-4" /> CAR #1 TELEMETRY FEED
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded">
-                GEAR 7 // 312 KM/H
-              </span>
-            </div>
-
-            <div className="space-y-3 font-mono text-xs">
-              <div>
-                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                  <span>THROTTLE PRESSURE</span>
-                  <span className="text-cyan-400">98%</span>
+        {/* SECTION 2: INTERACTIVE 3D TELEMETRY SUITE */}
+        <section id="telemetry" className="min-h-screen py-24 flex items-center justify-center px-6 md:px-16 pointer-events-none">
+          <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left Column: High-tech HUD telemetry cards & controls */}
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ margin: "-20%" }}
+              className="pointer-events-auto lg:col-span-5 bg-slate-950/80 backdrop-blur-xl border border-slate-800/90 p-6 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.9)] space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="flex flex-col">
+                  <span className="text-xs font-mono text-cyan-400 font-bold flex items-center gap-2">
+                    <Activity className="w-4 h-4 animate-pulse" /> Live Telemetry Suite
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500 mt-0.5 font-semibold">CIRCUIT CONTROLLER // V2.0</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-400 w-[98%]" />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                  <span>BRAKE FORCE</span>
-                  <span className="text-red-400">0%</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 w-[0%]" />
+                {/* Django Connection Status Badge */}
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${
+                  isApiFallback 
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' 
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                }`}>
+                  <Database className="w-3 h-3" />
+                  <span>{isApiFallback ? 'OFFLINE FALLBACK' : 'DJANGO API LIVE'}</span>
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                  <span>DRS STATUS</span>
-                  <span className="text-emerald-400">AVAILABLE</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-400 w-full" />
+              {/* Circuit Switcher Controls */}
+              <div className="space-y-3">
+                <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest block font-bold">Select Telemetry Circuit</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => setSelectedCircuit('monaco')}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold tracking-wider transition-all border ${
+                      selectedCircuit === 'monaco'
+                        ? 'bg-cyan-500/20 text-cyan-400 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                        : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    MONACO GP
+                  </button>
+                  <button 
+                    onClick={() => setSelectedCircuit('silverstone')}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold tracking-wider transition-all border ${
+                      selectedCircuit === 'silverstone'
+                        ? 'bg-cyan-500/20 text-cyan-400 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                        : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    SILVERSTONE GP
+                  </button>
                 </div>
               </div>
-            </div>
-          </motion.div>
+
+              {/* Active Circuit Info Card */}
+              <div className="p-4 bg-slate-900/60 border border-slate-850 rounded-2xl space-y-2">
+                <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 font-bold">
+                  <span>ACTIVE CIRCUIT METADATA</span>
+                  <Cpu className="w-3.5 h-3.5 text-cyan-500" />
+                </div>
+                {loadingCircuit ? (
+                  <div className="flex items-center gap-2 text-xs font-mono text-slate-400 py-2">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                    <span>Synchronizing database...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="text-sm font-bold text-white tracking-wide">
+                      {circuitData?.track_name || 'Loading...'}
+                    </div>
+                    <div className="text-xs text-slate-400 font-mono">
+                      Location: {circuitData?.locality}, {circuitData?.country}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono truncate max-w-full">
+                      Path Matrix: {circuitData?.svg_path ? `${circuitData.svg_path.substring(0, 30)}...` : 'N/A'}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Live Telemetry Progress Feeds */}
+              <div className="space-y-3 font-mono text-xs border-t border-slate-900 pt-4">
+                <div>
+                  <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                    <span>LIVE VEHICLE THROTTLE</span>
+                    <span className="text-cyan-400">92.4%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div className="h-full bg-cyan-400 w-[92.4%] transition-all duration-300" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                    <span>LIVE BRAKE LOAD</span>
+                    <span className="text-red-400">4.2%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div className="h-full bg-red-500 w-[4.2%] transition-all duration-300" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                    <span>Telemetry Signal Quality</span>
+                    <span className="text-emerald-400">99.8% (EXCELLENT)</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-400 w-[99.8%] transition-all duration-300" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right Column: Dynamic interactive 3D Canvas */}
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ margin: "-20%" }}
+              className="pointer-events-auto lg:col-span-7 w-full"
+            >
+              <TrackCanvas3D 
+                circuitData={circuitData}
+                trackColor="#00f3ff"
+                emissiveColor="#00c8ff"
+                glowColor="#ff0055"
+                gridColor="#ff0055"
+                autoRotate={true}
+              />
+            </motion.div>
+            
+          </div>
         </section>
 
         {/* SECTION 3: DRIVER LEADERBOARD OVERLAY */}
@@ -152,26 +291,44 @@ export default function Home() {
             viewport={{ margin: "-20%" }}
             className="pointer-events-auto max-w-md w-full bg-slate-950/80 backdrop-blur-xl border border-slate-800/90 p-6 rounded-2xl shadow-2xl space-y-4"
           >
-            <h3 className="text-sm font-mono font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Flag className="w-4 h-4 text-amber-400" /> LEADERBOARD STANDINGS
-            </h3>
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-mono font-bold text-white flex items-center gap-2">
+                <Flag className="w-4 h-4 text-amber-400" /> LEADERBOARD STANDINGS
+              </h3>
+              <div className="flex items-center gap-1 text-[9px] font-mono text-slate-500 font-semibold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                <Award className="w-3 h-3 text-cyan-400" /> LIVE FROM OPENF1
+              </div>
+            </div>
 
-            <div className="space-y-2 font-mono text-xs">
-              <div className="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                <span className="text-cyan-400 font-bold">P1. M. VERSTAPPEN</span>
-                <span className="text-slate-400">RED BULL</span>
-                <span className="text-amber-400 font-bold">195 PTS</span>
-              </div>
-              <div className="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                <span className="text-cyan-400 font-bold">P2. C. LECLERC</span>
-                <span className="text-slate-400">FERRARI</span>
-                <span className="text-amber-400 font-bold">138 PTS</span>
-              </div>
-              <div className="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                <span className="text-cyan-400 font-bold">P3. L. NORRIS</span>
-                <span className="text-slate-400">MCLAREN</span>
-                <span className="text-amber-400 font-bold">131 PTS</span>
-              </div>
+            <div className="space-y-2 font-mono text-xs max-h-[300px] overflow-y-auto pr-1">
+              {loadingDrivers ? (
+                <div className="flex flex-col items-center justify-center py-8 text-slate-400 gap-2">
+                  <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
+                  <span className="text-[10px] tracking-wider uppercase font-semibold">Fetching Standings...</span>
+                </div>
+              ) : (
+                drivers.map((driver, index) => (
+                  <div 
+                    key={driver.number || index} 
+                    className="flex items-center justify-between p-2.5 bg-slate-900/50 hover:bg-slate-900/80 rounded-xl border border-slate-800/80 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-500">#{driver.number}</span>
+                      <span 
+                        className="w-1.5 h-6 rounded-full" 
+                        style={{ backgroundColor: driver.team_color || '#FFFFFF' }}
+                      />
+                      <span className="text-cyan-400 font-bold uppercase tracking-wide">
+                        {driver.abbreviation} <span className="text-white font-medium text-[11px] normal-case tracking-normal ml-0.5">{driver.name.split(' ').pop()}</span>
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-medium">{driver.team.toUpperCase()}</div>
+                    <span className="text-amber-400 font-bold text-xs">
+                      {300 - index * 25} PTS
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </motion.div>
         </section>
