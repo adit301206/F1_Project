@@ -85,76 +85,97 @@ function TrackMesh({ curve, trackColor = "#00f3ff", emissiveColor = "#00aaff", g
   );
 }
 
-// Error boundary fallback F1 car built using primitive meshes
-function FallbackCarModel({ liveryColor = "#dc2626" }) {
+// High-fidelity procedural 3D F1 car model (livery, sidepods, halo, carbon wings, 4 tires)
+function ProceduralF1Car({ liveryColor = "#3671C2" }) {
   return (
-    <group>
-      {/* Main Body */}
-      <mesh position={[0, 0.07, 0]} castShadow>
-        <boxGeometry args={[0.18, 0.07, 0.55]} />
-        <meshStandardMaterial color={liveryColor} metalness={0.9} roughness={0.1} />
+    <group scale={1.1}>
+      {/* Monocoque Body Chassis */}
+      <mesh position={[0, 0.08, 0]} castShadow>
+        <boxGeometry args={[0.2, 0.08, 0.6]} />
+        <meshStandardMaterial color={liveryColor} metalness={0.9} roughness={0.15} />
       </mesh>
-      {/* Cockpit */}
-      <mesh position={[0, 0.12, -0.03]} castShadow>
-        <boxGeometry args={[0.1, 0.05, 0.16]} />
-        <meshStandardMaterial color="#070c17" metalness={0.95} roughness={0.05} />
+
+      {/* Nosecone Streamline */}
+      <mesh position={[0, 0.06, 0.35]} rotation={[0.1, 0, 0]} castShadow>
+        <coneGeometry args={[0.08, 0.25, 16]} />
+        <meshStandardMaterial color={liveryColor} metalness={0.9} roughness={0.15} />
       </mesh>
-      {/* Front Wing */}
-      <mesh position={[0, 0.03, 0.33]} castShadow>
-        <boxGeometry args={[0.38, 0.015, 0.09]} />
-        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={1.8} />
+
+      {/* Cockpit & Canopy */}
+      <mesh position={[0, 0.13, -0.02]} castShadow>
+        <boxGeometry args={[0.11, 0.06, 0.18]} />
+        <meshStandardMaterial color="#080c16" metalness={0.95} roughness={0.05} />
       </mesh>
-      {/* Rear Wing */}
-      <mesh position={[0, 0.15, -0.28]} castShadow>
-        <boxGeometry args={[0.32, 0.07, 0.07]} />
-        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={1.8} />
+
+      {/* Halo Structure */}
+      <mesh position={[0, 0.16, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.07, 0.012, 12, 24, Math.PI]} />
+        <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
       </mesh>
-      {/* Tires */}
-      <mesh position={[-0.12, 0.045, 0.18]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[0.055, 0.055, 0.045, 16]} /><meshStandardMaterial color="#111" roughness={0.4} /></mesh>
-      <mesh position={[0.12, 0.045, 0.18]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[0.055, 0.055, 0.045, 16]} /><meshStandardMaterial color="#111" roughness={0.4} /></mesh>
-      <mesh position={[-0.12, 0.05, -0.18]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[0.06, 0.06, 0.05, 16]} /><meshStandardMaterial color="#111" roughness={0.4} /></mesh>
-      <mesh position={[0.12, 0.05, -0.18]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[0.06, 0.06, 0.05, 16]} /><meshStandardMaterial color="#111" roughness={0.4} /></mesh>
+
+      {/* Aerodynamic Sidepods */}
+      <mesh position={[-0.14, 0.07, -0.05]} castShadow>
+        <boxGeometry args={[0.08, 0.07, 0.3]} />
+        <meshStandardMaterial color={liveryColor} metalness={0.85} roughness={0.2} />
+      </mesh>
+      <mesh position={[0.14, 0.07, -0.05]} castShadow>
+        <boxGeometry args={[0.08, 0.07, 0.3]} />
+        <meshStandardMaterial color={liveryColor} metalness={0.85} roughness={0.2} />
+      </mesh>
+
+      {/* Front Wing Assembly */}
+      <mesh position={[0, 0.03, 0.45]} castShadow>
+        <boxGeometry args={[0.42, 0.015, 0.1]} />
+        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={2.0} />
+      </mesh>
+      <mesh position={[-0.2, 0.06, 0.45]} castShadow>
+        <boxGeometry args={[0.015, 0.06, 0.1]} />
+        <meshStandardMaterial color={liveryColor} metalness={0.8} />
+      </mesh>
+      <mesh position={[0.2, 0.06, 0.45]} castShadow>
+        <boxGeometry args={[0.015, 0.06, 0.1]} />
+        <meshStandardMaterial color={liveryColor} metalness={0.8} />
+      </mesh>
+
+      {/* Rear Wing DRS Element */}
+      <mesh position={[0, 0.18, -0.32]} castShadow>
+        <boxGeometry args={[0.36, 0.08, 0.08]} />
+        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={2.0} />
+      </mesh>
+      <mesh position={[-0.17, 0.13, -0.32]} castShadow>
+        <boxGeometry args={[0.015, 0.12, 0.12]} />
+        <meshStandardMaterial color={liveryColor} />
+      </mesh>
+      <mesh position={[0.17, 0.13, -0.32]} castShadow>
+        <boxGeometry args={[0.015, 0.12, 0.12]} />
+        <meshStandardMaterial color={liveryColor} />
+      </mesh>
+
+      {/* Rear Rain LED Light */}
+      <mesh position={[0, 0.09, -0.35]}>
+        <boxGeometry args={[0.04, 0.03, 0.02]} />
+        <meshBasicMaterial color="#ff0055" />
+      </mesh>
+
+      {/* 4 Wheels (Pirelli Racing Tires) */}
+      <mesh position={[-0.15, 0.05, 0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.065, 0.065, 0.05, 24]} />
+        <meshStandardMaterial color="#111827" roughness={0.4} />
+      </mesh>
+      <mesh position={[0.15, 0.05, 0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.065, 0.065, 0.05, 24]} />
+        <meshStandardMaterial color="#111827" roughness={0.4} />
+      </mesh>
+      <mesh position={[-0.15, 0.06, -0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.075, 0.075, 0.06, 24]} />
+        <meshStandardMaterial color="#111827" roughness={0.4} />
+      </mesh>
+      <mesh position={[0.15, 0.06, -0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.075, 0.075, 0.06, 24]} />
+        <meshStandardMaterial color="#111827" roughness={0.4} />
+      </mesh>
     </group>
   );
-}
-
-class ModelErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(error) {
-    console.warn("[3D Engine] Fallback geometry activated for 3D car.", error);
-  }
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-    return this.props.children;
-  }
-}
-
-function CarModel({ liveryColor = "#3671C2" }) {
-  const { scene } = useGLTF('/models/f1_car.glb');
-  const clonedScene = useMemo(() => scene.clone(), [scene]);
-  
-  React.useEffect(() => {
-    clonedScene.traverse((child) => {
-      if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-        if (child.material) {
-          child.material.metalness = 0.9;
-          child.material.roughness = 0.1;
-        }
-      }
-    });
-  }, [clonedScene]);
-
-  return <primitive object={clonedScene} scale={0.25} />;
 }
 
 // Animated wrapper that moves the car model along the spline
@@ -191,9 +212,7 @@ function MovingCar({ curve, isPlaying = true, speedMultiplier = 1.0, liveryColor
 
   return (
     <group ref={carRef}>
-      <ModelErrorBoundary fallback={<FallbackCarModel liveryColor={liveryColor} />}>
-        <CarModel liveryColor={liveryColor} />
-      </ModelErrorBoundary>
+      <ProceduralF1Car liveryColor={liveryColor} />
     </group>
   );
 }
