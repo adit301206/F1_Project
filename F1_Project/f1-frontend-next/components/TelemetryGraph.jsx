@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Activity, Gauge, TrendingUp, Sliders } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Activity, Gauge, TrendingUp, Sliders, Zap } from 'lucide-react';
 import { generateLapTelemetry } from '@/lib/telemetryData';
 import { soundFx } from '@/lib/audioFx';
 
@@ -38,8 +39,27 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
     }).join(' ');
   }, [telemetryData]);
 
+  // Gradient area points
+  const areaA = useMemo(() => {
+    const firstX = padding;
+    const lastX = width - padding;
+    return `${firstX},${height - padding} ${pointsA} ${lastX},${height - padding}`;
+  }, [pointsA]);
+
+  const areaB = useMemo(() => {
+    const firstX = padding;
+    const lastX = width - padding;
+    return `${firstX},${height - padding} ${pointsB} ${lastX},${height - padding}`;
+  }, [pointsB]);
+
   return (
-    <div className="glass-panel p-6 rounded-3xl border border-slate-800/90 shadow-2xl space-y-5">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="glass-panel p-6 rounded-3xl border border-slate-800/90 shadow-2xl space-y-5 backdrop-blur-xl"
+    >
       
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-4">
@@ -55,8 +75,11 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
 
         {/* Driver Selection Switches */}
         <div className="flex items-center gap-3 font-mono text-xs">
-          <div className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-blue-500/30">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#3671C2]" />
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-blue-500/30 shadow-md"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[#3671C2] shadow-[0_0_8px_#3671C2]" />
             <span className="text-slate-300 font-bold">P1:</span>
             <select
               value={driverA}
@@ -66,16 +89,19 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
               }}
               className="bg-transparent text-cyan-400 font-bold focus:outline-none cursor-pointer"
             >
-              <option value="VER">VER (Red Bull)</option>
-              <option value="LEC">LEC (Ferrari)</option>
-              <option value="HAM">HAM (Ferrari)</option>
+              <option value="VER" className="bg-slate-950 text-white">VER (Red Bull)</option>
+              <option value="LEC" className="bg-slate-950 text-white">LEC (Ferrari)</option>
+              <option value="HAM" className="bg-slate-950 text-white">HAM (Ferrari)</option>
             </select>
-          </div>
+          </motion.div>
 
-          <span className="text-slate-600 font-bold">VS</span>
+          <span className="text-slate-600 font-bold text-xs">VS</span>
 
-          <div className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-orange-500/30">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FF8000]" />
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-md"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF8000] shadow-[0_0_8px_#FF8000]" />
             <span className="text-slate-300 font-bold">P2:</span>
             <select
               value={driverB}
@@ -85,11 +111,11 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
               }}
               className="bg-transparent text-orange-400 font-bold focus:outline-none cursor-pointer"
             >
-              <option value="NOR">NOR (McLaren)</option>
-              <option value="PIA">PIA (McLaren)</option>
-              <option value="RUS">RUS (Mercedes)</option>
+              <option value="NOR" className="bg-slate-950 text-white">NOR (McLaren)</option>
+              <option value="PIA" className="bg-slate-950 text-white">PIA (McLaren)</option>
+              <option value="RUS" className="bg-slate-950 text-white">RUS (Mercedes)</option>
             </select>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -97,22 +123,22 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
       <div className="relative w-full overflow-hidden bg-slate-950/90 rounded-2xl p-4 border border-slate-850">
         
         {/* Hover Crosshair Telemetry Stats Pill */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 text-mono text-xs bg-slate-900/70 p-3 rounded-xl border border-slate-800">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 text-mono text-xs bg-slate-900/70 p-3 rounded-xl border border-slate-800/90">
           <div>
             <span className="text-[10px] text-slate-500 uppercase block font-semibold">DIST. POINT</span>
-            <span className="font-bold text-white text-sm">{hoverData.distance}m ({hoverData.percent}%)</span>
+            <span className="font-bold text-white text-sm font-orbitron">{hoverData.distance}m ({hoverData.percent}%)</span>
           </div>
           <div>
             <span className="text-[10px] text-[#3671C2] uppercase block font-semibold">{driverA} SPEED</span>
-            <span className="font-bold text-cyan-400 text-sm">{Math.round(hoverData.speedA * speedMultiplier)} {unitLabel}</span>
+            <span className="font-bold text-cyan-400 text-sm font-orbitron">{Math.round(hoverData.speedA * speedMultiplier)} {unitLabel}</span>
           </div>
           <div>
             <span className="text-[10px] text-[#FF8000] uppercase block font-semibold">{driverB} SPEED</span>
-            <span className="font-bold text-amber-400 text-sm">{Math.round(hoverData.speedB * speedMultiplier)} {unitLabel}</span>
+            <span className="font-bold text-amber-400 text-sm font-orbitron">{Math.round(hoverData.speedB * speedMultiplier)} {unitLabel}</span>
           </div>
           <div>
             <span className="text-[10px] text-emerald-400 uppercase block font-semibold">SPEED DELTA</span>
-            <span className={`font-bold text-sm ${hoverData.speedA >= hoverData.speedB ? 'text-cyan-400' : 'text-orange-400'}`}>
+            <span className={`font-bold text-sm font-orbitron ${hoverData.speedA >= hoverData.speedB ? 'text-cyan-400' : 'text-orange-400'}`}>
               {hoverData.speedA >= hoverData.speedB ? '+' : ''}{Math.round((hoverData.speedA - hoverData.speedB) * speedMultiplier)} {unitLabel}
             </span>
           </div>
@@ -121,12 +147,27 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
         {/* SVG Plot */}
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-48 select-none"
+          className="w-full h-52 select-none"
           onMouseLeave={() => setHoverIndex(null)}
         >
+          <defs>
+            <linearGradient id="gradA" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#00f3ff" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#00f3ff" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="gradB" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ff8000" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#ff8000" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
           {/* Grid lines */}
           <line x1="0" y1={height / 2} x2={width} y2={height / 2} stroke="#1e293b" strokeDasharray="4" />
           <line x1="0" y1={padding} x2={width} y2={padding} stroke="#1e293b" strokeDasharray="4" />
+
+          {/* Gradient fill under curves */}
+          <polygon points={areaA} fill="url(#gradA)" />
+          <polygon points={areaB} fill="url(#gradB)" />
 
           {/* Driver A Speed Curve (Cyan) */}
           <polyline
@@ -134,7 +175,7 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
             stroke="#00f3ff"
             strokeWidth="3"
             points={pointsA}
-            className="drop-shadow-[0_0_8px_rgba(0,243,255,0.7)]"
+            className="drop-shadow-[0_0_12px_rgba(0,243,255,0.8)]"
           />
 
           {/* Driver B Speed Curve (Orange) */}
@@ -143,7 +184,7 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
             stroke="#ff8000"
             strokeWidth="3"
             points={pointsB}
-            className="drop-shadow-[0_0_8px_rgba(255,128,0,0.7)]"
+            className="drop-shadow-[0_0_12px_rgba(255,128,0,0.8)]"
           />
 
           {/* Interactive Hover Vertical Crosshair */}
@@ -183,30 +224,47 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
         {/* Dynamic Throttle & Brake Bar Telemetry Indicators */}
         <div className="grid grid-cols-2 gap-4 mt-2 font-mono text-xs pt-3 border-t border-slate-900">
           <div>
-            <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+            <div className="flex justify-between text-[10px] text-slate-400 mb-1 font-bold">
               <span>{driverA} THROTTLE / BRAKE</span>
               <span className="text-cyan-400">{hoverData.throttleA}% / {hoverData.brakeA}%</span>
             </div>
-            <div className="flex gap-1 h-1.5 bg-slate-900 rounded-full overflow-hidden">
-              <div className="bg-cyan-400 h-full transition-all duration-150" style={{ width: `${hoverData.throttleA}%` }} />
-              <div className="bg-red-500 h-full transition-all duration-150" style={{ width: `${hoverData.brakeA}%` }} />
+            <div className="flex gap-1 h-2 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+              <motion.div 
+                className="bg-cyan-400 h-full rounded-full shadow-[0_0_8px_#00f3ff]" 
+                animate={{ width: `${hoverData.throttleA}%` }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              />
+              <motion.div 
+                className="bg-red-500 h-full rounded-full shadow-[0_0_8px_#ef4444]" 
+                animate={{ width: `${hoverData.brakeA}%` }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              />
             </div>
           </div>
 
           <div>
-            <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+            <div className="flex justify-between text-[10px] text-slate-400 mb-1 font-bold">
               <span>{driverB} THROTTLE / BRAKE</span>
               <span className="text-orange-400">{hoverData.throttleB}% / {hoverData.brakeB}%</span>
             </div>
-            <div className="flex gap-1 h-1.5 bg-slate-900 rounded-full overflow-hidden">
-              <div className="bg-orange-400 h-full transition-all duration-150" style={{ width: `${hoverData.throttleB}%` }} />
-              <div className="bg-red-500 h-full transition-all duration-150" style={{ width: `${hoverData.brakeB}%` }} />
+            <div className="flex gap-1 h-2 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+              <motion.div 
+                className="bg-orange-400 h-full rounded-full shadow-[0_0_8px_#f97316]" 
+                animate={{ width: `${hoverData.throttleB}%` }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              />
+              <motion.div 
+                className="bg-red-500 h-full rounded-full shadow-[0_0_8px_#ef4444]" 
+                animate={{ width: `${hoverData.brakeB}%` }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              />
             </div>
           </div>
         </div>
 
       </div>
 
-    </div>
+    </motion.div>
   );
 }
+

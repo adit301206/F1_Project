@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Cpu, Zap, BatteryCharging, Flame } from 'lucide-react';
 
 export default function PowerUnitGauge() {
@@ -20,9 +21,16 @@ export default function PowerUnitGauge() {
 
   // Compute shift LED lights active state (10 LEDs)
   const shiftLeds = Math.min(10, Math.max(0, Math.floor(((rpm - 10000) / 2800) * 10)));
+  const isRevLimiter = rpm > 12400;
 
   return (
-    <div className="glass-panel p-5 rounded-3xl border border-slate-800/90 shadow-2xl space-y-4">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="glass-panel p-5 rounded-3xl border border-slate-800/90 shadow-2xl space-y-4 backdrop-blur-xl"
+    >
       
       {/* Title */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -39,17 +47,23 @@ export default function PowerUnitGauge() {
       <div>
         <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-1 font-bold">
           <span>ENGINE SPEED (RPM)</span>
-          <span className="text-white">{rpm} RPM</span>
+          <span className={`font-orbitron font-bold text-xs ${isRevLimiter ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+            {rpm} RPM
+          </span>
         </div>
-        <div className="grid grid-cols-10 gap-1.5 h-3 bg-slate-950 p-1 rounded-lg border border-slate-800">
+        <div className={`grid grid-cols-10 gap-1.5 h-3.5 bg-slate-950 p-1 rounded-xl border border-slate-800 transition-colors ${
+          isRevLimiter ? 'border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : ''
+        }`}>
           {Array.from({ length: 10 }).map((_, idx) => {
             const isActive = idx < shiftLeds;
             const colorClass = idx < 4 ? 'bg-emerald-400' : idx < 7 ? 'bg-amber-400' : 'bg-red-500';
             return (
-              <div 
+              <motion.div 
                 key={idx} 
+                animate={isActive ? { scale: [0.95, 1.05, 1] } : { scale: 1 }}
+                transition={{ duration: 0.2 }}
                 className={`h-full rounded-sm transition-all duration-150 ${
-                  isActive ? `${colorClass} shadow-[0_0_8px_rgba(255,255,255,0.6)]` : 'bg-slate-900'
+                  isActive ? `${colorClass} shadow-[0_0_10px_rgba(255,255,255,0.8)]` : 'bg-slate-900'
                 }`}
               />
             );
@@ -65,7 +79,7 @@ export default function PowerUnitGauge() {
           <div className="relative w-12 h-12 flex items-center justify-center">
             <svg className="w-12 h-12 transform -rotate-90">
               <circle cx="24" cy="24" r="20" stroke="#1e293b" strokeWidth="4" fill="transparent" />
-              <circle 
+              <motion.circle 
                 cx="24" 
                 cy="24" 
                 r="20" 
@@ -73,11 +87,11 @@ export default function PowerUnitGauge() {
                 strokeWidth="4" 
                 fill="transparent" 
                 strokeDasharray="125.6"
-                strokeDashoffset={125.6 - (125.6 * batteryPercent) / 100}
-                className="transition-all duration-500"
+                animate={{ strokeDashoffset: 125.6 - (125.6 * batteryPercent) / 100 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
               />
             </svg>
-            <span className="absolute text-[10px] font-bold text-white">{batteryPercent}%</span>
+            <span className="absolute text-[10px] font-bold text-white font-orbitron">{batteryPercent}%</span>
           </div>
           <div>
             <span className="text-[10px] text-slate-400 block font-bold">ERS BATTERY</span>
@@ -91,13 +105,14 @@ export default function PowerUnitGauge() {
             <span className="text-slate-400 font-bold">MGU-K FLOW</span>
             <BatteryCharging className={`w-3.5 h-3.5 ${mgukState === 'DEPLOYING' ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}`} />
           </div>
-          <span className={`text-sm font-bold ${mgukState === 'DEPLOYING' ? 'text-amber-400' : 'text-emerald-400'}`}>
+          <span className={`text-sm font-bold font-orbitron ${mgukState === 'DEPLOYING' ? 'text-amber-400' : 'text-emerald-400'}`}>
             {mgukState}
           </span>
         </div>
 
       </div>
 
-    </div>
+    </motion.div>
   );
 }
+
