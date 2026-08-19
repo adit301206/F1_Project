@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Shield, AlertTriangle, Thermometer } from 'lucide-react';
 
 export default function TireThermalHUD() {
@@ -12,13 +13,19 @@ export default function TireThermalHUD() {
   ];
 
   const getTempColor = (temp) => {
-    if (temp > 106) return 'text-red-400 border-red-500/50 bg-red-500/10';
-    if (temp >= 98) return 'text-emerald-400 border-emerald-500/50 bg-emerald-500/10';
-    return 'text-cyan-400 border-cyan-500/50 bg-cyan-500/10';
+    if (temp > 106) return 'text-red-400 border-red-500/50 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.2)]';
+    if (temp >= 98) return 'text-emerald-400 border-emerald-500/50 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+    return 'text-cyan-400 border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]';
   };
 
   return (
-    <div className="glass-panel p-5 rounded-3xl border border-slate-800/90 shadow-2xl space-y-4">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.3 }}
+      className="glass-panel p-5 rounded-3xl border border-slate-800/90 shadow-2xl space-y-4 backdrop-blur-xl"
+    >
       
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -32,15 +39,16 @@ export default function TireThermalHUD() {
       </div>
 
       {/* 4-Wheel Chassis Layout Grid */}
-      <div className="grid grid-cols-2 gap-3 font-mono text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
         {tires.map((tire) => (
-          <div 
+          <motion.div 
             key={tire.pos}
-            className={`p-3 rounded-2xl border transition-all ${getTempColor(tire.temp)} space-y-1.5`}
+            whileHover={{ scale: 1.03, y: -2 }}
+            className={`p-3.5 rounded-2xl border transition-all ${getTempColor(tire.temp)} space-y-2`}
           >
             <div className="flex justify-between items-center text-[10px] font-bold">
-              <span className="uppercase">{tire.pos} TIRE</span>
-              <span className="opacity-80">{tire.status}</span>
+              <span className="uppercase font-orbitron">{tire.pos} TIRE</span>
+              <span className="opacity-80 text-[9px] font-mono">{tire.status}</span>
             </div>
             
             <div className="flex justify-between items-baseline">
@@ -50,27 +58,30 @@ export default function TireThermalHUD() {
 
             {/* Tire Wear Bar */}
             <div>
-              <div className="flex justify-between text-[9px] text-slate-400 mb-1">
+              <div className="flex justify-between text-[9px] text-slate-400 mb-1 font-bold">
                 <span>LIFE</span>
-                <span className="font-bold text-white">{tire.wear}%</span>
+                <span className="text-white">{tire.wear}%</span>
               </div>
-              <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${tire.wear < 50 ? 'bg-red-500' : 'bg-emerald-400'} transition-all`}
-                  style={{ width: `${tire.wear}%` }} 
+              <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${tire.wear}%` }}
+                  transition={{ duration: 1, ease: 'easeOut' }}
+                  className={`h-full rounded-full ${tire.wear < 50 ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : 'bg-emerald-400 shadow-[0_0_8px_#10b981]'}`}
                 />
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Strategy Summary Pill */}
-      <div className="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl flex items-center justify-between text-[11px] font-mono text-slate-300">
-        <span className="text-slate-400">ESTIMATED PIT WINDOW:</span>
-        <span className="font-bold text-cyan-400">LAP 18 - 22 (TARGET HARD)</span>
+      <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center justify-between text-[11px] font-mono text-slate-300">
+        <span className="text-slate-400 font-bold">ESTIMATED PIT WINDOW:</span>
+        <span className="font-bold text-cyan-400 font-orbitron">LAP 18 - 22 (TARGET HARD COMPOUND)</span>
       </div>
 
-    </div>
+    </motion.div>
   );
 }
+

@@ -32,48 +32,60 @@ body {
   font-family: var(--font-rajdhani), sans-serif;
 }
 
-/* Carbon Fiber Texture Overlay */
+/* High-Tech Carbon Fiber & Grid Pattern */
 .bg-carbon-pattern {
-  background-color: #050811;
+  background-color: #040711;
   background-image: 
-    radial-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 0),
-    linear-gradient(45deg, rgba(15, 23, 42, 0.6) 25%, transparent 25%, transparent 75%, rgba(15, 23, 42, 0.6) 75%, rgba(15, 23, 42, 0.6)),
-    linear-gradient(45deg, rgba(15, 23, 42, 0.6) 25%, transparent 25%, transparent 75%, rgba(15, 23, 42, 0.6) 75%, rgba(15, 23, 42, 0.6));
-  background-size: 24px 24px, 12px 12px, 12px 12px;
-  background-position: 0 0, 0 0, 6px 6px;
+    radial-gradient(circle at 50% 0%, rgba(0, 243, 255, 0.08) 0%, transparent 60%),
+    radial-gradient(rgba(0, 243, 255, 0.04) 1px, transparent 0),
+    linear-gradient(45deg, rgba(15, 23, 42, 0.7) 25%, transparent 25%, transparent 75%, rgba(15, 23, 42, 0.7) 75%, rgba(15, 23, 42, 0.7)),
+    linear-gradient(45deg, rgba(15, 23, 42, 0.7) 25%, transparent 25%, transparent 75%, rgba(15, 23, 42, 0.7) 75%, rgba(15, 23, 42, 0.7));
+  background-size: 100% 100%, 24px 24px, 12px 12px, 12px 12px;
+  background-position: 0 0, 0 0, 0 0, 6px 6px;
 }
 
-/* Glassmorphic Panel Base Styles */
+/* Glassmorphic Panel Styles with Neon Borders */
 .glass-panel {
-  background: rgba(10, 16, 31, 0.75);
+  background: rgba(10, 16, 31, 0.78);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(0, 243, 255, 0.25);
+  box-shadow: 0 10px 40px -10px rgba(0, 243, 255, 0.15);
 }
 
 .glass-panel-cyan {
-  background: rgba(8, 25, 45, 0.8);
+  background: rgba(8, 25, 45, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 243, 255, 0.25);
-  box-shadow: 0 0 25px rgba(0, 243, 255, 0.08);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  box-shadow: 0 0 30px rgba(0, 243, 255, 0.12);
 }
 
-/* Glow & Neon Effects */
+/* Dynamic Glow Effects */
 .glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 243, 255, 0.35);
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.4);
 }
 
 .glow-red {
-  box-shadow: 0 0 20px rgba(225, 6, 0, 0.4);
+  box-shadow: 0 0 25px rgba(225, 6, 0, 0.45);
 }
 
 .text-glow-cyan {
-  text-shadow: 0 0 12px rgba(0, 243, 255, 0.7);
+  text-shadow: 0 0 15px rgba(0, 243, 255, 0.8);
 }
 
 .text-glow-red {
-  text-shadow: 0 0 12px rgba(225, 6, 0, 0.7);
+  text-shadow: 0 0 15px rgba(225, 6, 0, 0.8);
+}
+
+.text-glow-amber {
+  text-shadow: 0 0 15px rgba(245, 158, 11, 0.8);
 }
 
 /* Custom Telemetry Scrollbar */
@@ -96,7 +108,7 @@ body {
   background: #00f3ff;
 }
 
-/* Pulse Scanline Keyframes */
+/* Pulse & Scanline Animations */
 @keyframes scanline {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(1000%); }
@@ -105,3 +117,31 @@ body {
 .animate-scanline {
   animation: scanline 8s linear infinite;
 }
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.4)); }
+  50% { opacity: 0.9; filter: drop-shadow(0 0 20px rgba(0, 243, 255, 0.9)); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes laserSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-laser-sweep {
+  animation: laserSweep 12s linear infinite;
+}
+
+@keyframes revLimiterFlash {
+  0%, 100% { opacity: 1; background-color: rgba(239, 68, 68, 0.8); }
+  50% { opacity: 0.3; background-color: rgba(168, 85, 247, 0.8); }
+}
+
+.animate-rev-limiter {
+  animation: revLimiterFlash 0.3s ease-in-out infinite;
+}
+
