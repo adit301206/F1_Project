@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
-import { Compass, Eye, Zap, ChevronRight, Activity, ArrowDown, Flag } from 'lucide-react';
+import { Compass, Eye, Zap, ChevronRight, ChevronLeft, Activity, ArrowDown, Flag } from 'lucide-react';
 import { soundFx } from '@/lib/audioFx';
 
 // Exact Zandvoort GP Track Path SVG Coordinates
@@ -17,7 +17,7 @@ const CORNERS = [
     x: 370,
     y: 430,
     cameraFocus: "CAMERA / START LINE FOCUS",
-    speed: "312 KM/H",
+    speedKmh: 312,
     gear: "8",
     gForce: "1.2 G",
     throttle: 100,
@@ -31,7 +31,7 @@ const CORNERS = [
     x: 230,
     y: 210,
     cameraFocus: "CAMERA / TARZAN HAIRPIN",
-    speed: "115 KM/H",
+    speedKmh: 115,
     gear: "2",
     gForce: "4.6 G",
     throttle: 35,
@@ -45,7 +45,7 @@ const CORNERS = [
     x: 390,
     y: 120,
     cameraFocus: "CAMERA / HUGENHOLTZ BANKING",
-    speed: "142 KM/H",
+    speedKmh: 142,
     gear: "3",
     gForce: "3.8 G",
     throttle: 78,
@@ -59,7 +59,7 @@ const CORNERS = [
     x: 770,
     y: 170,
     cameraFocus: "CAMERA / SCHEIVLAK HIGH SPEED",
-    speed: "265 KM/H",
+    speedKmh: 265,
     gear: "6",
     gForce: "5.1 G",
     throttle: 92,
@@ -73,7 +73,7 @@ const CORNERS = [
     x: 830,
     y: 430,
     cameraFocus: "CAMERA / MID-SECTOR SPLIT",
-    speed: "230 KM/H",
+    speedKmh: 230,
     gear: "5",
     gForce: "3.4 G",
     throttle: 80,
@@ -87,7 +87,7 @@ const CORNERS = [
     x: 700,
     y: 890,
     cameraFocus: "CAMERA / LUYENDYK FINAL BANKING",
-    speed: "295 KM/H",
+    speedKmh: 295,
     gear: "7",
     gForce: "4.2 G",
     throttle: 100,
@@ -133,6 +133,20 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
 
   const activeCorner = CORNERS[activeCornerIndex];
 
+  const formattedSpeed = unit === 'mph'
+    ? `${Math.round(activeCorner.speedKmh * 0.621371)} MPH`
+    : `${activeCorner.speedKmh} KM/H`;
+
+  const handlePrevCorner = () => {
+    soundFx.playClick();
+    setActiveCornerIndex(prev => (prev > 0 ? prev - 1 : CORNERS.length - 1));
+  };
+
+  const handleNextCorner = () => {
+    soundFx.playClick();
+    setActiveCornerIndex(prev => (prev < CORNERS.length - 1 ? prev + 1 : 0));
+  };
+
   return (
     <section 
       ref={containerRef}
@@ -142,7 +156,7 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
       {/* STICKY SCREEN CONTAINER FOR SMOOTH SCROLL ZOOMING */}
       <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-between p-4 md:p-8 bg-[#080b12] border-y border-white/10">
         
-        {/* 1. TOP METADATA BAR (EXACT MATCH TO IMAGE 2) */}
+        {/* 1. TOP METADATA BAR */}
         <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 pt-16 md:pt-4 px-2">
           {/* Top Left Label */}
           <div className="flex items-center gap-2 text-xs text-slate-300 font-bold tracking-widest uppercase">
@@ -178,7 +192,7 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
           </div>
         </div>
 
-        {/* 2. CENTER TRACK CANVAS (INTERACTIVE SVG WITH CURBS & CAR PROBE) */}
+        {/* 2. CENTER TRACK CANVAS */}
         <div className="relative flex-1 flex items-center justify-center overflow-hidden my-2">
           
           {/* Animated Zoomable SVG Viewport */}
@@ -191,7 +205,7 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
               className="w-full h-full max-w-[950px] max-h-[750px] drop-shadow-[0_0_40px_rgba(0,0,0,0.9)]"
             >
               <defs>
-                {/* Authentic Red & White Kerb (Curb) Pattern Filter */}
+                {/* Red & White Kerb Pattern Filter */}
                 <pattern id="redWhiteKerb" width="20" height="20" patternUnits="userSpaceOnUse">
                   <rect width="10" height="20" fill="#FF1801" />
                   <rect x="10" width="10" height="20" fill="#FFFFFF" />
@@ -204,7 +218,7 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
                 </filter>
               </defs>
 
-              {/* OUTMOST LAYER: Red & White Kerbs (Curbs) Pattern Boundary */}
+              {/* OUTMOST LAYER: Red & White Kerbs Pattern Boundary */}
               <path 
                 d={ZANDVOORT_SVG_PATH} 
                 fill="none" 
@@ -249,11 +263,14 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
                 style={{ pathLength }}
               />
 
-              {/* CORNER HOTSPOT LABELS MATCHING IMAGE 2 */}
+              {/* CORNER HOTSPOT LABELS */}
               {CORNERS.map((corner, i) => {
                 const isActive = activeCornerIndex === i;
                 return (
-                  <g key={corner.id} className="cursor-pointer" onClick={() => setActiveCornerIndex(i)}>
+                  <g key={corner.id} className="cursor-pointer" onClick={() => {
+                    soundFx.playClick();
+                    setActiveCornerIndex(i);
+                  }}>
                     {/* Hotspot Pulsing Circle */}
                     <circle 
                       cx={corner.x} 
@@ -274,7 +291,7 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
                       />
                     )}
 
-                    {/* Corner Label Box matching Image 2 */}
+                    {/* Corner Label Box */}
                     <rect
                       x={corner.x + 12}
                       y={corner.y - 14}
@@ -311,15 +328,32 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="absolute bottom-6 right-6 z-30 max-w-sm w-full bg-[#0b0e17]/90 backdrop-blur-xl border border-white/15 p-5 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] space-y-3"
+              className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-30 max-w-sm w-[90%] sm:w-full bg-[#0b0e17]/92 backdrop-blur-xl border border-white/15 p-4 sm:p-5 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] space-y-3"
             >
               <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <span className="text-[10px] text-red-500 font-bold tracking-widest uppercase">
+                <span className="text-[10px] text-red-500 font-bold tracking-widest uppercase truncate max-w-[200px]">
                   SECTOR TELEMETRY // {activeCorner.name}
                 </span>
-                <span className="text-[10px] bg-white/10 text-white px-2 py-0.5 rounded font-orbitron font-bold">
-                  TURN {activeCornerIndex + 1} OF 14
-                </span>
+
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={handlePrevCorner}
+                    className="p-1 rounded bg-white/10 hover:bg-white/20 text-white transition-all"
+                    title="Previous Sector"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[10px] bg-white/10 text-white px-2 py-0.5 rounded font-orbitron font-bold">
+                    {activeCornerIndex + 1}/6
+                  </span>
+                  <button 
+                    onClick={handleNextCorner}
+                    className="p-1 rounded bg-white/10 hover:bg-white/20 text-white transition-all"
+                    title="Next Sector"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               <p className="text-xs text-slate-300 leading-relaxed font-sans">
@@ -330,7 +364,7 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
               <div className="grid grid-cols-3 gap-2 text-center pt-1 font-mono text-xs">
                 <div className="bg-black/40 p-2 rounded-xl border border-white/5">
                   <span className="text-[9px] text-slate-500 block uppercase">APEX SPEED</span>
-                  <span className="font-bold text-white text-sm font-orbitron">{activeCorner.speed}</span>
+                  <span className="font-bold text-white text-sm font-orbitron">{formattedSpeed}</span>
                 </div>
                 <div className="bg-black/40 p-2 rounded-xl border border-white/5">
                   <span className="text-[9px] text-slate-500 block uppercase">GEAR</span>
@@ -346,13 +380,13 @@ export default function ScrollCircuitApproach({ unit = 'kmh' }) {
 
         </div>
 
-        {/* 3. BOTTOM METADATA BAR (EXACT MATCH TO IMAGE 2) */}
+        {/* 3. BOTTOM METADATA BAR */}
         <div className="relative z-30 flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/10 text-xs text-slate-400">
           
           {/* Bottom Left: Dynamic Camera Focus Indicator */}
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-red-500" />
-            <span className="font-bold text-white tracking-widest uppercase font-orbitron">
+            <span className="font-bold text-white tracking-widest uppercase font-orbitron text-[11px]">
               {activeCorner.cameraFocus}
             </span>
           </div>
