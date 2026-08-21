@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Radio, Activity, Timer, ChevronDown, Flag, Database, RefreshCw, Cpu, Award, 
-  Wind, Thermometer, CloudRain, Users, Eye, Sliders, Play, CheckCircle2, Zap 
+  Wind, Thermometer, CloudRain, Users, Eye, Sliders, Play, CheckCircle2, Zap, Search, X 
 } from 'lucide-react';
 
 import CircuitPulseNavbar from '@/components/CircuitPulseNavbar';
@@ -34,6 +34,11 @@ export default function Home() {
   const [loadingDrivers, setLoadingDrivers] = useState(true);
   const [isApiFallback, setIsApiFallback] = useState(false);
   const [unit, setUnit] = useState('kmh');
+
+  // Standings Filter State
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDriverDetail, setSelectedDriverDetail] = useState(null);
 
   // Modals State
   const [isSpecsOpen, setIsSpecsOpen] = useState(false);
@@ -83,6 +88,15 @@ export default function Home() {
     setSelectedCircuit(id);
   };
 
+  // Filtered drivers list
+  const filteredDrivers = drivers.filter(d => {
+    const matchesTeam = selectedTeamFilter === 'ALL' || d.team.toLowerCase().includes(selectedTeamFilter.toLowerCase());
+    const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          d.abbreviation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          d.team.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTeam && matchesSearch;
+  });
+
   return (
     <div ref={containerRef} className="bg-[#07090e] text-slate-100 font-sans min-h-screen relative overflow-x-hidden selection:bg-red-600 selection:text-white">
       
@@ -90,7 +104,7 @@ export default function Home() {
       <div className="fixed top-20 left-1/4 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[160px] pointer-events-none animate-pulse" />
       <div className="fixed bottom-20 right-1/4 w-[450px] h-[450px] bg-blue-600/10 rounded-full blur-[160px] pointer-events-none animate-pulse" style={{ animationDelay: '1.5s' }} />
 
-      {/* 1. FLOATING PILL NAVBAR (EXACT UI FROM USER IMAGE 1 & 2) */}
+      {/* 1. FLOATING PILL NAVBAR */}
       <CircuitPulseNavbar 
         unit={unit}
         setUnit={setUnit}
@@ -99,12 +113,12 @@ export default function Home() {
         onOpenSpecs={() => setIsSpecsOpen(true)}
       />
 
-      {/* 2. HERO SECTION & COUNTDOWN CARD (IMAGE 1 REPLICA) */}
+      {/* 2. HERO SECTION & COUNTDOWN CARD */}
       <CircuitPulseHero 
         onExploreScroll={() => setActiveTab('CIRCUIT')}
       />
 
-      {/* 3. SCROLL-DRIVEN CIRCUIT APPROACH SECTION (IMAGE 2 REPLICA) */}
+      {/* 3. SCROLL-DRIVEN CIRCUIT APPROACH SECTION */}
       <ScrollCircuitApproach unit={unit} />
 
       {/* 4. MAIN TELEMETRY DASHBOARD CONTENT */}
@@ -145,7 +159,7 @@ export default function Home() {
           </div>
 
           {/* Circuit Switcher Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
             {Object.keys(CIRCUITS_DATA).map((id) => {
               const c = CIRCUITS_DATA[id];
               const isSelected = selectedCircuit === id;
@@ -255,12 +269,58 @@ export default function Home() {
             </motion.button>
           </div>
 
+          {/* Filter Bar & Search Input */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 font-mono text-xs">
+            <div className="flex flex-wrap items-center gap-1.5 bg-black/40 p-1 rounded-2xl border border-white/10 w-full md:w-auto">
+              {['ALL', 'Red Bull', 'Ferrari', 'McLaren', 'Mercedes'].map((team) => (
+                <button
+                  key={team}
+                  onClick={() => {
+                    soundFx.playClick();
+                    setSelectedTeamFilter(team);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl font-bold uppercase transition-all ${
+                    selectedTeamFilter === team
+                      ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(255,24,1,0.5)] font-orbitron'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {team}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full md:w-64">
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="SEARCH DRIVER OR TEAM..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-950/80 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Leaderboard Table */}
           <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl overflow-hidden backdrop-blur-xl bg-[#0b0e17]/80">
             {loadingDrivers ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-400 gap-3 font-mono text-xs">
                 <RefreshCw className="w-6 h-6 animate-spin text-red-500" />
                 <span>SYNCHRONIZING PADDOCK STANDINGS...</span>
+              </div>
+            ) : filteredDrivers.length === 0 ? (
+              <div className="text-center py-12 font-mono text-slate-500 text-xs">
+                NO DRIVERS MATCHING YOUR FILTER.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -278,7 +338,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {drivers.map((driver, index) => (
+                    {filteredDrivers.map((driver, index) => (
                       <motion.tr 
                         key={driver.number || index} 
                         initial={{ opacity: 0, x: -10 }}
@@ -286,14 +346,18 @@ export default function Home() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.3, delay: index * 0.04 }}
                         whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-                        className="transition-colors cursor-pointer"
+                        onClick={() => {
+                          soundFx.playClick();
+                          setSelectedDriverDetail(driver);
+                        }}
+                        className="transition-colors cursor-pointer group"
                       >
-                        <td className="py-3.5 font-bold font-orbitron text-slate-400">P{index + 1}</td>
+                        <td className="py-3.5 font-bold font-orbitron text-slate-400 group-hover:text-red-400">P{index + 1}</td>
                         <td className="py-3.5">
                           <div className="flex items-center gap-2.5">
                             <span className="w-1.5 h-6 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: driver.team_color }} />
                             <span className="font-bold text-white font-orbitron">#{driver.number} {driver.abbreviation}</span>
-                            <span className="text-slate-400 font-sans">{driver.name}</span>
+                            <span className="text-slate-400 font-sans hidden sm:inline">{driver.name}</span>
                           </div>
                         </td>
                         <td className="py-3.5 font-semibold text-slate-300">{driver.team}</td>
@@ -335,6 +399,72 @@ export default function Home() {
           POWERED BY NEXT.JS 16, FRAMER MOTION & THREE.JS SPATIAL CANVASES
         </p>
       </footer>
+
+      {/* DRIVER DETAIL POPUP MODAL */}
+      <AnimatePresence>
+        {selectedDriverDetail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedDriverDetail(null)}
+              className="absolute inset-0 bg-black/85 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-[#090e1a] border border-cyan-500/40 rounded-3xl p-6 shadow-[0_0_60px_rgba(0,243,255,0.25)] space-y-5 z-10 font-mono"
+            >
+              <button
+                onClick={() => setSelectedDriverDetail(null)}
+                className="absolute top-5 right-5 p-2 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-3">
+                <span className="w-3 h-10 rounded-full shadow-[0_0_12px_currentColor]" style={{ backgroundColor: selectedDriverDetail.team_color }} />
+                <div>
+                  <h3 className="text-2xl font-orbitron font-black text-white uppercase">
+                    #{selectedDriverDetail.number} {selectedDriverDetail.name}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-semibold">{selectedDriverDetail.team}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800">
+                  <span className="text-[10px] text-slate-500 uppercase block">SEASON POINTS</span>
+                  <span className="text-lg font-bold text-amber-400 font-orbitron">{selectedDriverDetail.points} PTS</span>
+                </div>
+                <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800">
+                  <span className="text-[10px] text-slate-500 uppercase block">SPEED TRAP</span>
+                  <span className="text-lg font-bold text-cyan-400 font-orbitron">
+                    {unit === 'mph' ? Math.round((selectedDriverDetail.top_speed || 348) * 0.621371) + ' MPH' : `${selectedDriverDetail.top_speed || 348} KM/H`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">SECTOR 1 SPLIT:</span>
+                  <span className="text-emerald-400 font-bold font-orbitron">{selectedDriverDetail.s1 || '21.402'}s</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">SECTOR 2 SPLIT:</span>
+                  <span className="text-emerald-400 font-bold font-orbitron">{selectedDriverDetail.s2 || '34.190'}s</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">SECTOR 3 SPLIT:</span>
+                  <span className="text-emerald-400 font-bold font-orbitron">{selectedDriverDetail.s3 || '19.210'}s</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* MODALS */}
       <CircuitSpecsModal 

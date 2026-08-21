@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ArrowDownRight, Radio, Sparkles, ChevronRight, Zap } from 'lucide-react';
+import { MapPin, ArrowDownRight, Radio, Sparkles, ChevronRight, Zap, Play, RotateCcw } from 'lucide-react';
 import { soundFx } from '@/lib/audioFx';
 
 export default function CircuitPulseHero({ onExploreScroll }) {
@@ -13,6 +13,13 @@ export default function CircuitPulseHero({ onExploreScroll }) {
     minutes: 32,
     seconds: 41
   });
+
+  // Interactive 5 Red LED Race Start Simulator
+  const [startLightsCount, setStartLightsCount] = useState(0);
+  const [lightsOut, setLightsOut] = useState(false);
+  const [isSequenceRunning, setIsSequenceRunning] = useState(false);
+  const [reactionTime, setReactionTime] = useState(null);
+  const [startTime, setStartTime] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -32,6 +39,42 @@ export default function CircuitPulseHero({ onExploreScroll }) {
     return () => clearInterval(timer);
   }, []);
 
+  const handleStartLightsSequence = () => {
+    if (isSequenceRunning) return;
+    soundFx.playClick();
+    setIsSequenceRunning(true);
+    setLightsOut(false);
+    setStartLightsCount(0);
+    setReactionTime(null);
+
+    let count = 0;
+    const interval = setInterval(() => {
+      count++;
+      soundFx.playTelemetryBeep();
+      setStartLightsCount(count);
+
+      if (count === 5) {
+        clearInterval(interval);
+        // Random delay between 1s and 2.8s for Lights Out!
+        const randomDelay = 1000 + Math.random() * 1800;
+        setTimeout(() => {
+          setLightsOut(true);
+          soundFx.playClick();
+          setStartTime(performance.now());
+          setIsSequenceRunning(false);
+        }, randomDelay);
+      }
+    }, 1000);
+  };
+
+  const handleReactionClick = () => {
+    if (lightsOut && startTime && reactionTime === null) {
+      const elapsed = ((performance.now() - startTime) / 1000).toFixed(3);
+      setReactionTime(elapsed);
+      soundFx.playClick();
+    }
+  };
+
   const formatDigit = (num) => (num < 10 ? `0${num}` : `${num}`);
 
   return (
@@ -42,7 +85,7 @@ export default function CircuitPulseHero({ onExploreScroll }) {
       {/* 1. ATMOSPHERIC NIGHT TRACK BACKDROP IMAGE & GRADIENT VIGNETTES */}
       <div className="absolute inset-0 z-0">
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat filter brightness-[0.4] contrast-[1.2] scale-105 transition-all duration-1000"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat filter brightness-[0.38] contrast-[1.2] scale-105 transition-all duration-1000"
           style={{
             backgroundImage: `url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2400&auto=format&fit=crop')`
           }}
@@ -54,10 +97,10 @@ export default function CircuitPulseHero({ onExploreScroll }) {
         <div className="absolute top-1/3 left-1/3 w-[600px] h-[300px] bg-red-600/10 rounded-full blur-[140px] pointer-events-none" />
       </div>
 
-      {/* 2. LEFT TELEMETRY OVERLAY AXIS (52° 22' N / F1 / 026) */}
+      {/* 2. LEFT TELEMETRY OVERLAY AXIS */}
       <div className="absolute left-6 top-1/3 hidden lg:flex flex-col items-center gap-6 z-20 text-slate-500 font-mono text-[11px] tracking-widest pointer-events-none">
         <span className="[writing-mode:vertical-lr] rotate-180 uppercase font-bold text-slate-400">
-          52° 22' N
+          52° 22' N ZANDVOORT
         </span>
         <div className="w-[1px] h-20 bg-slate-800/80" />
         <div className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[9px] font-bold text-slate-400">
@@ -65,33 +108,73 @@ export default function CircuitPulseHero({ onExploreScroll }) {
         </div>
       </div>
 
-      {/* 3. MAIN HERO CONTENT CONTAINER (GRID LAYOUT MATCHING IMAGE 1) */}
+      {/* 3. MAIN HERO CONTENT CONTAINER */}
       <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
         
-        {/* LEFT COLUMN: HEADLINE & COPY (7 COLS) */}
+        {/* LEFT COLUMN: HEADLINE & COPY & RACE START SIMULATOR (7 COLS) */}
         <motion.div 
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-7 space-y-6"
         >
-          {/* Subhead Signal Badge */}
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/60 border border-white/10 font-mono text-xs text-slate-300 backdrop-blur-md shadow-md">
-            <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
-            <span className="font-extrabold text-red-500 tracking-wider">NEXT SIGNAL</span>
-            <span className="text-slate-600">/</span>
-            <span className="text-slate-400 font-bold">ROUND 12</span>
+          {/* Subhead Signal Badge & Start Simulator Pill */}
+          <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/60 border border-white/10 text-slate-300 backdrop-blur-md shadow-md">
+              <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+              <span className="font-extrabold text-red-500 tracking-wider">NEXT SIGNAL</span>
+              <span className="text-slate-600">/</span>
+              <span className="text-slate-400 font-bold">ROUND 12</span>
+            </div>
+
+            {/* Interactive F1 5-Red Light Start Sequence Widget */}
+            <div 
+              onClick={handleReactionClick}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/15 backdrop-blur-md cursor-pointer hover:border-red-500/50 transition-all"
+              title="Click when lights go OUT to test your reaction time!"
+            >
+              <div className="flex items-center gap-1">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const isLit = !lightsOut && startLightsCount > i;
+                  return (
+                    <span 
+                      key={i}
+                      className={`w-3 h-3 rounded-full border transition-all duration-200 ${
+                        isLit
+                          ? 'bg-red-600 border-red-400 shadow-[0_0_12px_rgba(255,24,1,1)]'
+                          : 'bg-slate-900 border-slate-700'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+
+              {!isSequenceRunning && !lightsOut && (
+                <button 
+                  onClick={handleStartLightsSequence}
+                  className="text-[10px] text-cyan-400 font-bold hover:underline ml-1 uppercase font-mono flex items-center gap-1"
+                >
+                  <Play className="w-3 h-3 fill-current" /> START SIM
+                </button>
+              )}
+
+              {lightsOut && (
+                <span className="text-[10px] text-emerald-400 font-bold uppercase font-orbitron animate-pulse">
+                  {reactionTime ? `REACTION: ${reactionTime}s` : 'LIGHTS OUT! CLICK!'}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* High-Impact Headline matching Image 1 */}
           <div className="space-y-1 font-orbitron">
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.2rem] font-black tracking-tighter uppercase leading-[0.88] text-white">
+            <h1 className="text-4xl sm:text-7xl md:text-8xl lg:text-[6.2rem] font-black tracking-tighter uppercase leading-[0.88] text-white">
               THE NEXT
             </h1>
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.2rem] font-black tracking-tighter uppercase leading-[0.88] text-[#FF1801] drop-shadow-[0_0_35px_rgba(255,24,1,0.5)]">
+            <h1 className="text-4xl sm:text-7xl md:text-8xl lg:text-[6.2rem] font-black tracking-tighter uppercase leading-[0.88] text-[#FF1801] drop-shadow-[0_0_35px_rgba(255,24,1,0.5)]">
               LIGHTS
             </h1>
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.2rem] font-black tracking-tighter uppercase leading-[0.88] text-white">
+            <h1 className="text-4xl sm:text-7xl md:text-8xl lg:text-[6.2rem] font-black tracking-tighter uppercase leading-[0.88] text-white">
               ARE COMING.
             </h1>
           </div>
@@ -131,7 +214,7 @@ export default function CircuitPulseHero({ onExploreScroll }) {
           </div>
         </motion.div>
 
-        {/* RIGHT COLUMN: FLOATING COUNTDOWN CARD (5 COLS - EXACT MATCH TO IMAGE 1) */}
+        {/* RIGHT COLUMN: FLOATING COUNTDOWN CARD (5 COLS) */}
         <motion.div 
           initial={{ opacity: 0, y: 40, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

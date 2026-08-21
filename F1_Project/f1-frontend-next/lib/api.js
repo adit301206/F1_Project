@@ -2,6 +2,26 @@
  * Comprehensive F1 Circuit Dataset & Fallbacks
  */
 export const CIRCUITS_DATA = {
+  zandvoort: {
+    id: "zandvoort",
+    track_name: "Circuit Park Zandvoort",
+    locality: "Zandvoort",
+    country: "Netherlands",
+    length_km: 4.259,
+    turns: 14,
+    drs_zones: 2,
+    elevation_delta_m: 15,
+    lap_record: "1:11.097 (Lewis Hamilton, 2021)",
+    top_speed_kmh: 315,
+    svg_path: "M 380,430 C 320,370 270,320 230,210 C 240,140 310,110 390,120 C 470,130 520,170 580,210 C 640,250 720,230 770,170 C 820,110 880,130 890,200 C 900,270 850,360 830,430 C 810,500 780,570 800,640 C 820,710 880,770 860,830 C 840,880 770,910 700,890 C 620,870 540,820 460,760 Z",
+    corners: [
+      { id: 1, name: "Tarzan Corner", speed: 115, gear: 2 },
+      { id: 3, name: "Hugenholtzbocht", speed: 142, gear: 3 },
+      { id: 7, name: "Scheivlak", speed: 265, gear: 6 },
+      { id: 10, name: "Hans Ernstbocht", speed: 125, gear: 3 },
+      { id: 14, name: "Arie Luyendykbocht", speed: 295, gear: 7 },
+    ]
+  },
   monaco: {
     id: "monaco",
     track_name: "Circuit de Monaco",
