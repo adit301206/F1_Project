@@ -47,32 +47,37 @@ export default function TelemetryGraph({ unit = 'kmh' }) {
   const height = 200;
   const padding = 20;
 
-  const getMetricValue = (point, driverKey) => {
-    if (activeMetricTab === 'THROTTLE') return driverKey === 'A' ? point.throttleA : point.throttleB;
-    if (activeMetricTab === 'BRAKE') return driverKey === 'A' ? point.brakeA : point.brakeB;
-    if (activeMetricTab === 'GEAR') return driverKey === 'A' ? (point.gearA / 8) * 100 : (point.gearB / 8) * 100;
-    return driverKey === 'A' ? point.speedA : point.speedB;
-  };
-
   const maxVal = activeMetricTab === 'SPEED' ? 360 : 100;
 
   const pointsA = useMemo(() => {
+    const getVal = (point, driverKey) => {
+      if (activeMetricTab === 'THROTTLE') return driverKey === 'A' ? point.throttleA : point.throttleB;
+      if (activeMetricTab === 'BRAKE') return driverKey === 'A' ? point.brakeA : point.brakeB;
+      if (activeMetricTab === 'GEAR') return driverKey === 'A' ? (point.gearA / 8) * 100 : (point.gearB / 8) * 100;
+      return driverKey === 'A' ? point.speedA : point.speedB;
+    };
     return telemetryData.map((d, i) => {
       const x = padding + (i / (telemetryData.length - 1)) * (width - padding * 2);
-      const val = getMetricValue(d, 'A');
+      const val = getVal(d, 'A');
       const y = height - padding - (val / maxVal) * (height - padding * 2);
       return `${x},${y}`;
     }).join(' ');
-  }, [telemetryData, activeMetricTab]);
+  }, [telemetryData, activeMetricTab, maxVal]);
 
   const pointsB = useMemo(() => {
+    const getVal = (point, driverKey) => {
+      if (activeMetricTab === 'THROTTLE') return driverKey === 'A' ? point.throttleA : point.throttleB;
+      if (activeMetricTab === 'BRAKE') return driverKey === 'A' ? point.brakeA : point.brakeB;
+      if (activeMetricTab === 'GEAR') return driverKey === 'A' ? (point.gearA / 8) * 100 : (point.gearB / 8) * 100;
+      return driverKey === 'A' ? point.speedA : point.speedB;
+    };
     return telemetryData.map((d, i) => {
       const x = padding + (i / (telemetryData.length - 1)) * (width - padding * 2);
-      const val = getMetricValue(d, 'B');
+      const val = getVal(d, 'B');
       const y = height - padding - (val / maxVal) * (height - padding * 2);
       return `${x},${y}`;
     }).join(' ');
-  }, [telemetryData, activeMetricTab]);
+  }, [telemetryData, activeMetricTab, maxVal]);
 
   const areaA = useMemo(() => {
     const firstX = padding;

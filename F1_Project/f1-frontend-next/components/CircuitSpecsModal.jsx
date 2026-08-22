@@ -124,7 +124,7 @@ export default function CircuitSpecsModal({ circuitId = 'monaco', isOpen, onClos
                 <div key={corner.id} className="p-2.5 bg-slate-900/90 border border-slate-800 rounded-xl flex items-center justify-between">
                   <span className="font-bold text-cyan-400 font-orbitron">T{corner.id}. {corner.name}</span>
                   <span className="text-slate-400 text-[11px]">
-                    {Math.round(corner.speed * speedMultiplier)} {speedLabel} // G{corner.gear}
+                    {Math.round(corner.speed * speedMultiplier)} {speedLabel} {"//"} G{corner.gear}
                   </span>
                 </div>
               ))}

@@ -100,7 +100,7 @@ export default function CircuitPulseHero({ onExploreScroll }) {
       {/* 2. LEFT TELEMETRY OVERLAY AXIS */}
       <div className="absolute left-6 top-1/3 hidden lg:flex flex-col items-center gap-6 z-20 text-slate-500 font-mono text-[11px] tracking-widest pointer-events-none">
         <span className="[writing-mode:vertical-lr] rotate-180 uppercase font-bold text-slate-400">
-          52° 22' N ZANDVOORT
+          52° 22&apos; N ZANDVOORT
         </span>
         <div className="w-[1px] h-20 bg-slate-800/80" />
         <div className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[9px] font-bold text-slate-400">
