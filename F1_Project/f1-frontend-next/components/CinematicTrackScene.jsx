@@ -6,14 +6,8 @@ import { Timer, Radio, Activity, Compass, ChevronRight, Gauge } from 'lucide-rea
 import { getUpcomingRace, RACE_SCHEDULE } from '@/lib/raceCalendar';
 
 export default function DynamicBroadcastHub() {
-  const [activeRace, setActiveRace] = useState(null);
+  const [activeRace, setActiveRace] = useState(() => getUpcomingRace());
   const [currentCornerIndex, setCurrentCornerIndex] = useState(0);
-
-  // Initialize upcoming race venue on load
-  useEffect(() => {
-    const upcoming = getUpcomingRace();
-    setActiveRace(upcoming);
-  }, []);
 
   // Simulate real-time ECU telemetry cycling through turns
   useEffect(() => {

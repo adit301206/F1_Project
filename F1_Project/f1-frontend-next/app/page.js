@@ -47,7 +47,6 @@ export default function Home() {
   // Fetch circuit metadata
   useEffect(() => {
     let active = true;
-    setLoadingCircuit(true);
     fetchCircuitData(selectedCircuit)
       .then((data) => {
         if (active) {
@@ -67,7 +66,6 @@ export default function Home() {
   // Fetch driver standings
   useEffect(() => {
     let active = true;
-    setLoadingDrivers(true);
     fetchDriversData()
       .then((data) => {
         if (active) {
@@ -85,6 +83,7 @@ export default function Home() {
 
   const handleCircuitSelect = (id) => {
     soundFx.playClick();
+    setLoadingCircuit(true);
     setSelectedCircuit(id);
   };
 

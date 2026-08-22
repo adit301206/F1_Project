@@ -19,7 +19,10 @@ export default function GForceMeter() {
       const newY = Math.sin(angle) * radius;
 
       setBallPos({ x: newX, y: newY });
-      setHistoryTrail(prev => [{ x: newX, y: newY, id: Date.now() }, ...prev.slice(0, 4)]);
+      setHistoryTrail(prev => [
+        { x: newX, y: newY, id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` },
+        ...prev.slice(0, 4)
+      ]);
 
       setGMetrics({
         lateralG: (Math.sin(angle) * 4.2).toFixed(2),
