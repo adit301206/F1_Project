@@ -1,5 +1,6 @@
 /**
- * Web Audio API synthesizer for HUD button click and telemetry alert sounds
+ * Web Audio API synthesizer for F1 HUD button clicks, telemetry alerts,
+ * 5-red-light race countdown, and V6 turbo hybrid spool.
  */
 class SoundManager {
   constructor() {
@@ -14,6 +15,9 @@ class SoundManager {
         this.audioCtx = new AudioContext();
       }
     }
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
   }
 
   playClick() {
@@ -27,7 +31,7 @@ class SoundManager {
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, this.audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.04);
+      osc.frequency.exponentialRampToValueAtTime(1400, this.audioCtx.currentTime + 0.04);
 
       gain.gain.setValueAtTime(0.08, this.audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.04);
@@ -38,7 +42,7 @@ class SoundManager {
       osc.start();
       osc.stop(this.audioCtx.currentTime + 0.04);
     } catch (e) {
-      // Audio autoplay policy catch
+      // Audio autoplay catch
     }
   }
 
@@ -53,18 +57,95 @@ class SoundManager {
 
       osc.type = 'square';
       osc.frequency.setValueAtTime(1400, this.audioCtx.currentTime);
-      osc.frequency.setValueAtTime(1800, this.audioCtx.currentTime + 0.05);
+      osc.frequency.setValueAtTime(2200, this.audioCtx.currentTime + 0.04);
 
-      gain.gain.setValueAtTime(0.05, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.04, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.08);
 
       osc.connect(gain);
       gain.connect(this.audioCtx.destination);
 
       osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.1);
+      osc.stop(this.audioCtx.currentTime + 0.08);
     } catch (e) {
-      // Audio context error fallback
+      // Audio catch
+    }
+  }
+
+  playRedLightBeep() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.audioCtx) return;
+
+    try {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(440, this.audioCtx.currentTime);
+
+      gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.15);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc.start();
+      osc.stop(this.audioCtx.currentTime + 0.15);
+    } catch (e) {
+      // Audio catch
+    }
+  }
+
+  playLightsOut() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.audioCtx) return;
+
+    try {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(880, this.audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1760, this.audioCtx.currentTime + 0.25);
+
+      gain.gain.setValueAtTime(0.18, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc.start();
+      osc.stop(this.audioCtx.currentTime + 0.25);
+    } catch (e) {
+      // Audio catch
+    }
+  }
+
+  playTurboSpool() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.audioCtx) return;
+
+    try {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(250, this.audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(2400, this.audioCtx.currentTime + 0.6);
+
+      gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.65);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc.start();
+      osc.stop(this.audioCtx.currentTime + 0.65);
+    } catch (e) {
+      // Audio catch
     }
   }
 
@@ -75,3 +156,4 @@ class SoundManager {
 }
 
 export const soundFx = new SoundManager();
+

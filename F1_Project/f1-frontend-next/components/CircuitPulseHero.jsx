@@ -14,12 +14,70 @@ export default function CircuitPulseHero({ onExploreScroll }) {
     seconds: 41
   });
 
+  // Grand Prix Selection State
+  const [activeGpId, setActiveGpId] = useState('zandvoort');
+
+  const grandPrixList = {
+    zandvoort: {
+      name: 'HEINEKEN DUTCH GP',
+      circuit: 'Circuit Park Zandvoort • NL',
+      round: 'ROUND 12 / 24',
+      date: '21 - 23 AUG 2026',
+      days: 2, hours: 19, mins: 32,
+      backdrop: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2400&auto=format&fit=crop'
+    },
+    monaco: {
+      name: 'GRAND PRIX DE MONACO',
+      circuit: 'Circuit de Monaco • MC',
+      round: 'ROUND 08 / 24',
+      date: '22 - 24 MAY 2026',
+      days: 14, hours: 6, mins: 12,
+      backdrop: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=2400&auto=format&fit=crop'
+    },
+    silverstone: {
+      name: 'BRITISH GRAND PRIX',
+      circuit: 'Silverstone Circuit • UK',
+      round: 'ROUND 10 / 24',
+      date: '03 - 05 JUL 2026',
+      days: 42, hours: 11, mins: 45,
+      backdrop: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=2400&auto=format&fit=crop'
+    },
+    spa: {
+      name: 'BELGIAN GRAND PRIX',
+      circuit: 'Circuit de Spa-Francorchamps • BE',
+      round: 'ROUND 13 / 24',
+      date: '24 - 26 JUL 2026',
+      days: 64, hours: 8, mins: 20,
+      backdrop: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2400&auto=format&fit=crop'
+    },
+    monza: {
+      name: 'GRAN PREMIO D’ITALIA',
+      circuit: 'Autodromo Nazionale Monza • IT',
+      round: 'ROUND 16 / 24',
+      date: '04 - 06 SEP 2026',
+      days: 88, hours: 14, mins: 5,
+      backdrop: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=2400&auto=format&fit=crop'
+    }
+  };
+
+  const selectedGp = grandPrixList[activeGpId] || grandPrixList.zandvoort;
+
   // Interactive 5 Red LED Race Start Simulator
   const [startLightsCount, setStartLightsCount] = useState(0);
   const [lightsOut, setLightsOut] = useState(false);
   const [isSequenceRunning, setIsSequenceRunning] = useState(false);
   const [reactionTime, setReactionTime] = useState(null);
+  const [falseStart, setFalseStart] = useState(false);
+  const [bestReactionTime, setBestReactionTime] = useState(null);
   const [startTime, setStartTime] = useState(null);
+
+  // Load best score on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('f1_best_reaction');
+      if (saved) setBestReactionTime(saved);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -39,27 +97,29 @@ export default function CircuitPulseHero({ onExploreScroll }) {
     return () => clearInterval(timer);
   }, []);
 
-  const handleStartLightsSequence = () => {
+  const handleStartLightsSequence = (e) => {
+    if (e) e.stopPropagation();
     if (isSequenceRunning) return;
     soundFx.playClick();
     setIsSequenceRunning(true);
     setLightsOut(false);
+    setFalseStart(false);
     setStartLightsCount(0);
     setReactionTime(null);
 
     let count = 0;
     const interval = setInterval(() => {
       count++;
-      soundFx.playTelemetryBeep();
+      soundFx.playRedLightBeep();
       setStartLightsCount(count);
 
       if (count === 5) {
         clearInterval(interval);
-        // Random delay between 1s and 2.8s for Lights Out!
-        const randomDelay = 1000 + Math.random() * 1800;
+        // Random delay between 1s and 2.5s for Lights Out!
+        const randomDelay = 1000 + Math.random() * 1500;
         setTimeout(() => {
           setLightsOut(true);
-          soundFx.playClick();
+          soundFx.playLightsOut();
           setStartTime(performance.now());
           setIsSequenceRunning(false);
         }, randomDelay);
@@ -68,11 +128,35 @@ export default function CircuitPulseHero({ onExploreScroll }) {
   };
 
   const handleReactionClick = () => {
-    if (lightsOut && startTime && reactionTime === null) {
+    if (isSequenceRunning && !lightsOut) {
+      // User clicked before lights out! Jumped the start!
+      setFalseStart(true);
+      setIsSequenceRunning(false);
+      setStartLightsCount(0);
+      soundFx.playRedLightBeep();
+      return;
+    }
+
+    if (lightsOut && startTime && reactionTime === null && !falseStart) {
       const elapsed = ((performance.now() - startTime) / 1000).toFixed(3);
       setReactionTime(elapsed);
       soundFx.playClick();
+
+      if (!bestReactionTime || parseFloat(elapsed) < parseFloat(bestReactionTime)) {
+        setBestReactionTime(elapsed);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('f1_best_reaction', elapsed);
+        }
+      }
     }
+  };
+
+  const getReactionRating = (val) => {
+    const num = parseFloat(val);
+    if (num < 0.200) return '🔥 GODLIKE (VERSTAPPEN PACE)';
+    if (num < 0.260) return '⚡ EXCELLENT (PODIUM START)';
+    if (num < 0.350) return '🟢 GOOD REFLEX';
+    return '⚠️ TURBO LAG';
   };
 
   const formatDigit = (num) => (num < 10 ? `0${num}` : `${num}`);
@@ -130,18 +214,26 @@ export default function CircuitPulseHero({ onExploreScroll }) {
             {/* Interactive F1 5-Red Light Start Sequence Widget */}
             <div 
               onClick={handleReactionClick}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/15 backdrop-blur-md cursor-pointer hover:border-red-500/50 transition-all"
+              className={`inline-flex flex-col sm:flex-row items-start sm:items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-950/90 border transition-all cursor-pointer shadow-xl ${
+                falseStart 
+                  ? 'border-red-500/80 bg-red-950/40 shadow-[0_0_20px_rgba(239,68,68,0.4)]'
+                  : lightsOut && reactionTime 
+                  ? 'border-emerald-500/80 bg-emerald-950/40 shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                  : 'border-white/15 hover:border-red-500/50'
+              }`}
               title="Click when lights go OUT to test your reaction time!"
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 {Array.from({ length: 5 }).map((_, i) => {
-                  const isLit = !lightsOut && startLightsCount > i;
+                  const isLit = !lightsOut && !falseStart && startLightsCount > i;
                   return (
                     <span 
                       key={i}
-                      className={`w-3 h-3 rounded-full border transition-all duration-200 ${
+                      className={`w-3.5 h-3.5 rounded-full border transition-all duration-150 ${
                         isLit
-                          ? 'bg-red-600 border-red-400 shadow-[0_0_12px_rgba(255,24,1,1)]'
+                          ? 'bg-red-600 border-red-400 shadow-[0_0_15px_rgba(255,24,1,1)] scale-110'
+                          : falseStart
+                          ? 'bg-amber-500 border-amber-400 animate-pulse'
                           : 'bg-slate-900 border-slate-700'
                       }`}
                     />
@@ -149,19 +241,56 @@ export default function CircuitPulseHero({ onExploreScroll }) {
                 })}
               </div>
 
-              {!isSequenceRunning && !lightsOut && (
-                <button 
-                  onClick={handleStartLightsSequence}
-                  className="text-[10px] text-cyan-400 font-bold hover:underline ml-1 uppercase font-mono flex items-center gap-1"
-                >
-                  <Play className="w-3 h-3 fill-current" /> START SIM
-                </button>
+              {!isSequenceRunning && !lightsOut && !falseStart && (
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={handleStartLightsSequence}
+                    className="text-[10px] text-cyan-400 font-bold hover:underline uppercase font-mono flex items-center gap-1 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/30"
+                  >
+                    <Play className="w-3 h-3 fill-current" /> START SIM
+                  </button>
+                  {bestReactionTime && (
+                    <span className="text-[9px] text-amber-400 font-bold font-mono">
+                      BEST: {bestReactionTime}s
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {isSequenceRunning && (
+                <span className="text-[10px] text-amber-400 font-bold uppercase font-orbitron animate-pulse">
+                  READY... GET SET...
+                </span>
+              )}
+
+              {falseStart && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-red-400 font-bold uppercase font-orbitron">
+                    ❌ JUMPED START (+5S)
+                  </span>
+                  <button
+                    onClick={handleStartLightsSequence}
+                    className="text-[9px] text-white underline font-bold"
+                  >
+                    RETRY
+                  </button>
+                </div>
               )}
 
               {lightsOut && (
-                <span className="text-[10px] text-emerald-400 font-bold uppercase font-orbitron animate-pulse">
-                  {reactionTime ? `REACTION: ${reactionTime}s` : 'LIGHTS OUT! CLICK!'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-emerald-400 font-bold uppercase font-orbitron">
+                    {reactionTime ? `${reactionTime}s • ${getReactionRating(reactionTime)}` : '⚡ LIGHTS OUT! CLICK NOW!'}
+                  </span>
+                  {reactionTime && (
+                    <button
+                      onClick={handleStartLightsSequence}
+                      className="text-[9px] text-cyan-400 hover:text-white underline font-bold ml-1"
+                    >
+                      AGAIN
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -181,7 +310,7 @@ export default function CircuitPulseHero({ onExploreScroll }) {
 
           {/* Subtitle Description */}
           <p className="text-sm md:text-base font-mono text-slate-300 max-w-xl leading-relaxed tracking-wide font-normal pt-2">
-            A circuit-first countdown to the Dutch Grand Prix. Start wide. Follow the line. Feel the race arrive.
+            A circuit-first spatial telemetry countdown to the Grand Prix. Start wide. Follow the racing line. Feel the arrival.
           </p>
 
           {/* Action CTAs */}
@@ -223,65 +352,75 @@ export default function CircuitPulseHero({ onExploreScroll }) {
         >
           <div 
             id="race-widget"
-            className="glass-panel rounded-3xl p-6 sm:p-7 bg-[#0b0f19]/80 backdrop-blur-2xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.9)] space-y-6 relative overflow-hidden group hover:border-red-500/30 transition-all"
+            className="glass-panel rounded-3xl p-6 sm:p-7 bg-[#0b0f19]/85 backdrop-blur-2xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.9)] space-y-6 relative overflow-hidden group hover:border-red-500/30 transition-all"
           >
             {/* Top Glow Accent Bar */}
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-600 via-white/40 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-600 via-cyan-400 to-transparent" />
 
-            {/* Top Row: UPCOMING & 12 / 24 */}
+            {/* Top Row: UPCOMING & RACE SELECTOR */}
             <div className="flex items-center justify-between font-mono text-xs">
               <span className="text-slate-400 font-bold tracking-widest uppercase text-[11px]">
-                UPCOMING
+                UPCOMING RACE
               </span>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-                <span className="text-white font-extrabold tracking-wider font-orbitron">
-                  12 / 24
-                </span>
+                <select
+                  value={activeGpId}
+                  onChange={(e) => {
+                    soundFx.playClick();
+                    setActiveGpId(e.target.value);
+                  }}
+                  className="bg-slate-900 text-cyan-400 font-orbitron font-bold text-[11px] px-2.5 py-1 rounded-full border border-cyan-500/30 focus:outline-none cursor-pointer"
+                >
+                  <option value="zandvoort">DUTCH GP</option>
+                  <option value="monaco">MONACO GP</option>
+                  <option value="silverstone">BRITISH GP</option>
+                  <option value="spa">BELGIAN GP</option>
+                  <option value="monza">ITALIAN GP</option>
+                </select>
               </div>
             </div>
 
             {/* Title Section */}
             <div className="space-y-1">
-              <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase block">
-                FORMULA 1
+              <span className="text-xs font-mono font-bold tracking-widest text-red-500 uppercase block">
+                {selectedGp.round}
               </span>
               <h2 className="text-2xl sm:text-3xl font-orbitron font-black uppercase text-white tracking-tight italic">
-                HEINEKEN DUTCH GP
+                {selectedGp.name}
               </h2>
-              <div className="flex items-center gap-1.5 text-slate-400 font-mono text-xs pt-1">
+              <div className="flex items-center gap-1.5 text-slate-300 font-mono text-xs pt-1">
                 <MapPin className="w-3.5 h-3.5 text-red-500" />
-                <span>Circuit Park Zandvoort • NL</span>
+                <span>{selectedGp.circuit}</span>
               </div>
             </div>
 
             {/* Live Countdown Grid matching Image 1 */}
             <div className="grid grid-cols-4 gap-2 pt-2 border-t border-white/10 font-mono text-center">
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
+              <div className="bg-black/50 p-3 rounded-2xl border border-white/5">
                 <span className="block text-2xl sm:text-3xl font-black text-white font-orbitron">
-                  {formatDigit(timeLeft.days)}
+                  {formatDigit(selectedGp.days)}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase block mt-0.5">
                   DAYS
                 </span>
               </div>
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
+              <div className="bg-black/50 p-3 rounded-2xl border border-white/5">
                 <span className="block text-2xl sm:text-3xl font-black text-white font-orbitron">
-                  {formatDigit(timeLeft.hours)}
+                  {formatDigit(selectedGp.hours)}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase block mt-0.5">
                   HRS
                 </span>
               </div>
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
+              <div className="bg-black/50 p-3 rounded-2xl border border-white/5">
                 <span className="block text-2xl sm:text-3xl font-black text-white font-orbitron">
-                  {formatDigit(timeLeft.minutes)}
+                  {formatDigit(selectedGp.mins)}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase block mt-0.5">
                   MIN
                 </span>
               </div>
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5 relative overflow-hidden">
+              <div className="bg-black/50 p-3 rounded-2xl border border-white/5 relative overflow-hidden">
                 <motion.span 
                   key={timeLeft.seconds}
                   initial={{ y: -5, opacity: 0.7 }}
@@ -299,7 +438,7 @@ export default function CircuitPulseHero({ onExploreScroll }) {
             {/* Track Pulse Live Bar */}
             <div className="space-y-2 pt-1 font-mono text-[10px]">
               <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-wider">
-                <span>TRACK PULSE</span>
+                <span>TRACK TELEMETRY SIGNAL</span>
                 <span className="text-red-500 font-orbitron flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" /> LIVE
                 </span>
@@ -307,16 +446,16 @@ export default function CircuitPulseHero({ onExploreScroll }) {
               <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden p-0.5 border border-white/10">
                 <motion.div 
                   initial={{ width: '0%' }}
-                  animate={{ width: '70%' }}
+                  animate={{ width: '75%' }}
                   transition={{ duration: 1.5, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-red-600 via-red-500 to-white rounded-full shadow-[0_0_10px_rgba(255,24,1,0.8)]"
+                  className="h-full bg-gradient-to-r from-red-600 via-cyan-400 to-white rounded-full shadow-[0_0_10px_rgba(255,24,1,0.8)]"
                 />
               </div>
             </div>
 
             {/* Card Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-white/10 font-mono text-[11px] text-slate-400 font-bold">
-              <span>21 - 23 AUG 2026</span>
+              <span>{selectedGp.date}</span>
               <span className="text-white bg-white/10 px-2 py-0.5 rounded text-[10px] uppercase font-orbitron tracking-wider">
                 SPRINT WEEKEND
               </span>

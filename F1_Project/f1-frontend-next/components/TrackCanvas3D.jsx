@@ -197,11 +197,18 @@ function MovingCar({ curve, isPlaying = true, speedMultiplier = 1.0, liveryColor
     const lookTarget = point.clone().add(tangent);
     carRef.current.lookAt(lookTarget);
 
-    // Dynamic Camera Tracking Mode Adjustment
+    // Dynamic Camera Tracking Modes
     if (cameraMode === "chase" && controlsRef.current) {
       const camOffset = point.clone().sub(tangent.clone().multiplyScalar(2.5)).add(new THREE.Vector3(0, 1.2, 0));
       state.camera.position.lerp(camOffset, 0.08);
       controlsRef.current.target.lerp(point, 0.1);
+      controlsRef.current.update();
+    } else if (cameraMode === "cockpit" && controlsRef.current) {
+      // Driver Helmet / Cockpit Halo POV looking straight forward down the apex
+      const helmetPos = point.clone().add(new THREE.Vector3(0, 0.22, 0));
+      const lookAhead = point.clone().add(tangent.clone().multiplyScalar(4.0)).add(new THREE.Vector3(0, 0.1, 0));
+      state.camera.position.lerp(helmetPos, 0.2);
+      controlsRef.current.target.lerp(lookAhead, 0.2);
       controlsRef.current.update();
     } else if (cameraMode === "topdown" && controlsRef.current) {
       state.camera.position.set(0, 12, 0.01);
@@ -273,7 +280,8 @@ export default function TrackCanvas3D({
   const controlsRef = useRef();
   const [isPlaying, setIsPlaying] = useState(true);
   const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
-  const [cameraMode, setCameraMode] = useState("orbit"); // 'orbit', 'chase', 'topdown'
+  const [cameraMode, setCameraMode] = useState("orbit"); // 'orbit', 'chase', 'cockpit', 'topdown'
+  const [weatherMode, setWeatherMode] = useState("night"); // 'night', 'sunset', 'rain'
   const [selectedTeam, setSelectedTeam] = useState("redbull");
 
   const teamsMap = {
@@ -311,7 +319,7 @@ export default function TrackCanvas3D({
       </div>
 
       {/* Floating Interactive HUD Controls Toolbar */}
-      <div className="absolute top-5 right-6 z-20 flex items-center gap-2 bg-slate-950/85 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800/90 shadow-2xl">
+      <div className="absolute top-5 right-6 z-20 flex flex-wrap items-center gap-2 bg-slate-950/85 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800/90 shadow-2xl">
         
         {/* Play / Pause Toggle */}
         <button
@@ -335,6 +343,43 @@ export default function TrackCanvas3D({
         >
           {speedMultiplier}x SPEED
         </button>
+
+        {/* Weather Lighting Mode Switcher */}
+        <div className="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-xl border border-slate-800">
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setWeatherMode("night");
+            }}
+            className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
+              weatherMode === "night" ? "bg-red-600 text-white shadow-[0_0_10px_rgba(255,24,1,0.4)]" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            🌙 NIGHT
+          </button>
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setWeatherMode("sunset");
+            }}
+            className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
+              weatherMode === "sunset" ? "bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.4)]" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            ☀️ DAY
+          </button>
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setWeatherMode("rain");
+            }}
+            className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
+              weatherMode === "rain" ? "bg-cyan-500 text-black shadow-[0_0_10px_rgba(0,243,255,0.4)]" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            🌧️ RAIN
+          </button>
+        </div>
 
         {/* Camera View Mode Switcher */}
         <div className="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-xl border border-slate-800">
@@ -367,6 +412,19 @@ export default function TrackCanvas3D({
           <button
             onClick={() => {
               soundFx.playClick();
+              setCameraMode("cockpit");
+            }}
+            className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
+              cameraMode === "cockpit"
+                ? "bg-cyan-500 text-black shadow-[0_0_10px_rgba(0,243,255,0.4)]"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            HALO POV
+          </button>
+          <button
+            onClick={() => {
+              soundFx.playClick();
               setCameraMode("topdown");
             }}
             className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
@@ -375,7 +433,7 @@ export default function TrackCanvas3D({
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            TOP-DOWN
+            GRID
           </button>
         </div>
 
@@ -416,11 +474,11 @@ export default function TrackCanvas3D({
           maxDistance={18} 
         />
         
-        <Environment preset="night" />
+        <Environment preset={weatherMode === "sunset" ? "sunset" : "night"} />
 
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[8, 14, 6]} intensity={2.2} color="#ffffff" castShadow />
-        <pointLight position={[0, 5, 0]} intensity={7} color="#00ffff" />
+        <ambientLight intensity={weatherMode === "sunset" ? 1.2 : 0.6} />
+        <directionalLight position={[8, 14, 6]} intensity={weatherMode === "sunset" ? 3.5 : 2.2} color={weatherMode === "sunset" ? "#ffaa55" : "#ffffff"} castShadow />
+        <pointLight position={[0, 5, 0]} intensity={7} color={weatherMode === "rain" ? "#0088ff" : "#00ffff"} />
 
         <Grid
           position={[0, -0.01, 0]}
