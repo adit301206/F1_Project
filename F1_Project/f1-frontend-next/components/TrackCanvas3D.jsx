@@ -3,9 +3,8 @@
 import React, { useRef, Suspense, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment, Html, Grid } from '@react-three/drei';
-import { useGLTF } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { Play, Pause, Camera, Eye, Zap, RefreshCw, Cpu, Layers } from 'lucide-react';
+import { Play, Pause, Zap, CloudRain, Sun, Moon } from 'lucide-react';
 import * as THREE from 'three';
 import { soundFx } from '@/lib/audioFx';
 
@@ -26,7 +25,6 @@ function getCurveFromSVGPath(svgPath) {
 
   if (points.length === 0) return null;
 
-  // Center and scale the spline points so they fit nicely in our 3D view grid
   let minX = Infinity, maxX = -Infinity;
   let minZ = Infinity, maxZ = -Infinity;
   points.forEach(p => {
@@ -54,8 +52,13 @@ function getCurveFromSVGPath(svgPath) {
 }
 
 // 3D Multi-Colored Segmented Circuit Mesh
-function TrackMesh({ curve, trackColor = "#00f3ff", emissiveColor = "#00aaff", glowColor = "#ff0055" }) {
+function TrackMesh({ curve, trackColor = "#00f3ff", emissiveColor = "#00aaff", glowColor = "#ff0055", weatherMode = "night" }) {
   if (!curve) return null;
+
+  // Dynamic track material properties depending on weather mode
+  const emissiveIntensity = weatherMode === "night" ? 4.0 : weatherMode === "rain" ? 2.8 : 1.2;
+  const metalness = weatherMode === "rain" ? 0.95 : weatherMode === "sunset" ? 0.75 : 0.88;
+  const roughness = weatherMode === "rain" ? 0.05 : weatherMode === "sunset" ? 0.25 : 0.12;
 
   return (
     <group>
@@ -63,42 +66,42 @@ function TrackMesh({ curve, trackColor = "#00f3ff", emissiveColor = "#00aaff", g
       <mesh>
         <tubeGeometry args={[curve, 300, 0.09, 14, true]} />
         <meshStandardMaterial
-          color={trackColor}
-          emissive={emissiveColor}
-          emissiveIntensity={2.5}
-          roughness={0.12}
-          metalness={0.88}
+          color={weatherMode === "sunset" ? "#e0f2fe" : trackColor}
+          emissive={weatherMode === "sunset" ? "#0284c7" : emissiveColor}
+          emissiveIntensity={emissiveIntensity}
+          roughness={roughness}
+          metalness={metalness}
         />
       </mesh>
 
       {/* Outer Halo Glow Tube */}
       <mesh position={[0, -0.04, 0]}>
-        <tubeGeometry args={[curve, 300, 0.16, 12, true]} />
+        <tubeGeometry args={[curve, 300, 0.17, 12, true]} />
         <meshBasicMaterial
-          color={glowColor}
+          color={weatherMode === "sunset" ? "#38bdf8" : weatherMode === "rain" ? "#00f3ff" : glowColor}
           wireframe
           transparent
-          opacity={0.22}
+          opacity={weatherMode === "night" ? 0.35 : weatherMode === "rain" ? 0.45 : 0.15}
         />
       </mesh>
     </group>
   );
 }
 
-// High-fidelity procedural 3D F1 car model (livery, sidepods, halo, carbon wings, 4 tires)
-function ProceduralF1Car({ liveryColor = "#3671C2" }) {
+// High-fidelity procedural 3D F1 car model
+function ProceduralF1Car({ liveryColor = "#3671C2", weatherMode = "night" }) {
   return (
     <group scale={1.1}>
       {/* Monocoque Body Chassis */}
       <mesh position={[0, 0.08, 0]} castShadow>
         <boxGeometry args={[0.2, 0.08, 0.6]} />
-        <meshStandardMaterial color={liveryColor} metalness={0.9} roughness={0.15} />
+        <meshStandardMaterial color={liveryColor} metalness={0.92} roughness={weatherMode === "rain" ? 0.05 : 0.15} />
       </mesh>
 
       {/* Nosecone Streamline */}
       <mesh position={[0, 0.06, 0.35]} rotation={[0.1, 0, 0]} castShadow>
         <coneGeometry args={[0.08, 0.25, 16]} />
-        <meshStandardMaterial color={liveryColor} metalness={0.9} roughness={0.15} />
+        <meshStandardMaterial color={liveryColor} metalness={0.92} roughness={weatherMode === "rain" ? 0.05 : 0.15} />
       </mesh>
 
       {/* Cockpit & Canopy */}
@@ -116,17 +119,17 @@ function ProceduralF1Car({ liveryColor = "#3671C2" }) {
       {/* Aerodynamic Sidepods */}
       <mesh position={[-0.14, 0.07, -0.05]} castShadow>
         <boxGeometry args={[0.08, 0.07, 0.3]} />
-        <meshStandardMaterial color={liveryColor} metalness={0.85} roughness={0.2} />
+        <meshStandardMaterial color={liveryColor} metalness={0.85} roughness={weatherMode === "rain" ? 0.05 : 0.2} />
       </mesh>
       <mesh position={[0.14, 0.07, -0.05]} castShadow>
         <boxGeometry args={[0.08, 0.07, 0.3]} />
-        <meshStandardMaterial color={liveryColor} metalness={0.85} roughness={0.2} />
+        <meshStandardMaterial color={liveryColor} metalness={0.85} roughness={weatherMode === "rain" ? 0.05 : 0.2} />
       </mesh>
 
       {/* Front Wing Assembly */}
       <mesh position={[0, 0.03, 0.45]} castShadow>
         <boxGeometry args={[0.42, 0.015, 0.1]} />
-        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={2.0} />
+        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={weatherMode === "night" ? 2.5 : 1.0} />
       </mesh>
       <mesh position={[-0.2, 0.06, 0.45]} castShadow>
         <boxGeometry args={[0.015, 0.06, 0.1]} />
@@ -140,7 +143,7 @@ function ProceduralF1Car({ liveryColor = "#3671C2" }) {
       {/* Rear Wing DRS Element */}
       <mesh position={[0, 0.18, -0.32]} castShadow>
         <boxGeometry args={[0.36, 0.08, 0.08]} />
-        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={2.0} />
+        <meshStandardMaterial color="#00f3ff" emissive="#00aaff" emissiveIntensity={weatherMode === "night" ? 2.5 : 1.0} />
       </mesh>
       <mesh position={[-0.17, 0.13, -0.32]} castShadow>
         <boxGeometry args={[0.015, 0.12, 0.12]} />
@@ -151,35 +154,99 @@ function ProceduralF1Car({ liveryColor = "#3671C2" }) {
         <meshStandardMaterial color={liveryColor} />
       </mesh>
 
-      {/* Rear Rain LED Light */}
+      {/* Rear Rain LED Light - Flash brightly in Rain mode */}
       <mesh position={[0, 0.09, -0.35]}>
-        <boxGeometry args={[0.04, 0.03, 0.02]} />
-        <meshBasicMaterial color="#ff0055" />
+        <boxGeometry args={[0.05, 0.04, 0.02]} />
+        <meshBasicMaterial color="#ff0044" />
       </mesh>
 
-      {/* 4 Wheels (Pirelli Racing Tires) */}
+      {/* 4 Pirelli Tires (WET Tread in Rain Mode) */}
       <mesh position={[-0.15, 0.05, 0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.065, 0.065, 0.05, 24]} />
-        <meshStandardMaterial color="#111827" roughness={0.4} />
+        <meshStandardMaterial color={weatherMode === "rain" ? "#0f172a" : "#111827"} roughness={weatherMode === "rain" ? 0.1 : 0.4} />
       </mesh>
       <mesh position={[0.15, 0.05, 0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.065, 0.065, 0.05, 24]} />
-        <meshStandardMaterial color="#111827" roughness={0.4} />
+        <meshStandardMaterial color={weatherMode === "rain" ? "#0f172a" : "#111827"} roughness={weatherMode === "rain" ? 0.1 : 0.4} />
       </mesh>
       <mesh position={[-0.15, 0.06, -0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.075, 0.075, 0.06, 24]} />
-        <meshStandardMaterial color="#111827" roughness={0.4} />
+        <meshStandardMaterial color={weatherMode === "rain" ? "#0f172a" : "#111827"} roughness={weatherMode === "rain" ? 0.1 : 0.4} />
       </mesh>
       <mesh position={[0.15, 0.06, -0.22]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.075, 0.075, 0.06, 24]} />
-        <meshStandardMaterial color="#111827" roughness={0.4} />
+        <meshStandardMaterial color={weatherMode === "rain" ? "#0f172a" : "#111827"} roughness={weatherMode === "rain" ? 0.1 : 0.4} />
       </mesh>
     </group>
   );
 }
 
-// Animated wrapper that moves the car model along the spline
-function MovingCar({ curve, isPlaying = true, speedMultiplier = 1.0, liveryColor = "#3671C2", cameraMode = "orbit", controlsRef }) {
+// 🌧️ 3D Rain Particle System (1,000 continuous rain streaks)
+function RainParticles({ count = 1000 }) {
+  const pointsRef = useRef();
+
+  const [positions, velocities] = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const vel = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 28;
+      pos[i * 3 + 1] = Math.random() * 16;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 28;
+      vel[i] = 0.25 + Math.random() * 0.35;
+    }
+    return [pos, vel];
+  }, [count]);
+
+  useFrame((state, delta) => {
+    if (!pointsRef.current) return;
+    const posAttr = pointsRef.current.geometry.attributes.position;
+    const array = posAttr.array;
+    for (let i = 0; i < count; i++) {
+      array[i * 3 + 1] -= velocities[i] * delta * 65;
+      if (array[i * 3 + 1] < -0.1) {
+        array[i * 3 + 1] = 14 + Math.random() * 3;
+        array[i * 3] = (Math.random() - 0.5) * 28;
+        array[i * 3 + 2] = (Math.random() - 0.5) * 28;
+      }
+    }
+    posAttr.needsUpdate = true;
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          args={[positions, 3]}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.07}
+        color="#38bdf8"
+        transparent
+        opacity={0.75}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+}
+
+// 🌩️ Lightning Flash Effect in Rain Mode
+function LightningEffect() {
+  const lightRef = useRef();
+  useFrame(() => {
+    if (!lightRef.current) return;
+    if (Math.random() < 0.006) {
+      lightRef.current.intensity = 18;
+    } else {
+      lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, 0, 0.18);
+    }
+  });
+  return <pointLight ref={lightRef} position={[0, 10, 0]} color="#bae6fd" />;
+}
+
+// Animated wrapper that moves car model along spline
+function MovingCar({ curve, isPlaying = true, speedMultiplier = 1.0, liveryColor = "#3671C2", cameraMode = "orbit", controlsRef, weatherMode = "night" }) {
   const carRef = useRef();
   const progressRef = useRef(0);
 
@@ -204,7 +271,6 @@ function MovingCar({ curve, isPlaying = true, speedMultiplier = 1.0, liveryColor
       controlsRef.current.target.lerp(point, 0.1);
       controlsRef.current.update();
     } else if (cameraMode === "cockpit" && controlsRef.current) {
-      // Driver Helmet / Cockpit Halo POV looking straight forward down the apex
       const helmetPos = point.clone().add(new THREE.Vector3(0, 0.22, 0));
       const lookAhead = point.clone().add(tangent.clone().multiplyScalar(4.0)).add(new THREE.Vector3(0, 0.1, 0));
       state.camera.position.lerp(helmetPos, 0.2);
@@ -219,12 +285,12 @@ function MovingCar({ curve, isPlaying = true, speedMultiplier = 1.0, liveryColor
 
   return (
     <group ref={carRef}>
-      <ProceduralF1Car liveryColor={liveryColor} />
+      <ProceduralF1Car liveryColor={liveryColor} weatherMode={weatherMode} />
     </group>
   );
 }
 
-// Interactive 3D Corner Waypoints HTML Overlay
+// Corner Waypoints HTML Overlay
 function CornerWaypoints({ curve, corners = [] }) {
   if (!curve || !corners.length) return null;
 
@@ -301,8 +367,38 @@ export default function TrackCanvas3D({
   const displayLocality = circuitData ? `${circuitData.locality}, ${circuitData.country}` : "Monte Carlo, Monaco";
   const cornersList = circuitData?.corners || [];
 
+  // Weather Preset Visual Metadata
+  const weatherConfig = {
+    night: {
+      title: "🌙 SINGAPORE NIGHT GP",
+      subtitle: "FLOODLIGHT ILLUMINATION // HIGH EMISSIVE NEON CONTRAST",
+      bgClass: "bg-[#020409] border-red-500/30",
+      canvasBg: "#020409",
+      gridColor: "#ff0055",
+      envPreset: "night"
+    },
+    sunset: {
+      title: "☀️ MONACO DAYLIGHT GP",
+      subtitle: "SUNNY SKYLINE // HIGH VISIBILITY // REALISTIC SOLAR REFLECTION",
+      bgClass: "bg-[#0b172a] border-sky-500/40",
+      canvasBg: "#0f1f38",
+      gridColor: "#0284c7",
+      envPreset: "dawn"
+    },
+    rain: {
+      title: "🌧️ SPA TORRENTIAL RAIN",
+      subtitle: "HEAVY DOWNPOUR // WET REFLECTIVE TARMAC // STORM LIGHTNING",
+      bgClass: "bg-[#050c18] border-cyan-500/40",
+      canvasBg: "#061122",
+      gridColor: "#00f3ff",
+      envPreset: "night"
+    }
+  };
+
+  const currentW = weatherConfig[weatherMode];
+
   return (
-    <div className="relative w-full h-[580px] bg-[#070b16] rounded-3xl overflow-hidden border border-slate-800/90 shadow-[0_0_50px_rgba(0,0,0,0.9)]">
+    <div className={`relative w-full h-[580px] ${currentW.bgClass} rounded-3xl overflow-hidden border shadow-[0_0_60px_rgba(0,0,0,0.95)] transition-all duration-700`}>
       
       {/* Top Overlay: Circuit Specs Badge */}
       <div className="absolute top-5 left-6 z-20 pointer-events-none select-none">
@@ -313,9 +409,14 @@ export default function TrackCanvas3D({
         <h2 className="text-3xl font-orbitron font-black italic tracking-tight text-white mt-2 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]">
           {displayTrackName.toUpperCase()}
         </h2>
-        <p className="text-xs font-mono text-slate-400 uppercase tracking-wider mt-0.5 font-semibold">
-          {displayLocality}
-        </p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <p className="text-xs font-mono text-slate-400 uppercase tracking-wider font-semibold">
+            {displayLocality}
+          </p>
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-900/90 text-amber-400 border border-amber-500/30">
+            {currentW.title}
+          </span>
+        </div>
       </div>
 
       {/* Floating Interactive HUD Controls Toolbar */}
@@ -351,33 +452,33 @@ export default function TrackCanvas3D({
               soundFx.playClick();
               setWeatherMode("night");
             }}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
-              weatherMode === "night" ? "bg-red-600 text-white shadow-[0_0_10px_rgba(255,24,1,0.4)]" : "text-slate-400 hover:text-white"
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center gap-1 ${
+              weatherMode === "night" ? "bg-red-600 text-white shadow-[0_0_12px_rgba(255,24,1,0.6)]" : "text-slate-400 hover:text-white"
             }`}
           >
-            🌙 NIGHT
+            <Moon className="w-3 h-3" /> NIGHT
           </button>
           <button
             onClick={() => {
               soundFx.playClick();
               setWeatherMode("sunset");
             }}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
-              weatherMode === "sunset" ? "bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.4)]" : "text-slate-400 hover:text-white"
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center gap-1 ${
+              weatherMode === "sunset" ? "bg-amber-500 text-black shadow-[0_0_12px_rgba(245,158,11,0.6)]" : "text-slate-400 hover:text-white"
             }`}
           >
-            ☀️ DAY
+            <Sun className="w-3 h-3" /> DAY
           </button>
           <button
             onClick={() => {
               soundFx.playClick();
               setWeatherMode("rain");
             }}
-            className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
-              weatherMode === "rain" ? "bg-cyan-500 text-black shadow-[0_0_10px_rgba(0,243,255,0.4)]" : "text-slate-400 hover:text-white"
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center gap-1 ${
+              weatherMode === "rain" ? "bg-cyan-500 text-black shadow-[0_0_12px_rgba(0,243,255,0.6)]" : "text-slate-400 hover:text-white"
             }`}
           >
-            🌧️ RAIN
+            <CloudRain className="w-3 h-3" /> RAIN
           </button>
         </div>
 
@@ -474,28 +575,72 @@ export default function TrackCanvas3D({
           maxDistance={18} 
         />
         
-        <Environment preset={weatherMode === "sunset" ? "sunset" : "night"} />
+        {/* Dynamic Scene Environment & Atmosphere */}
+        <color attach="background" args={[currentW.canvasBg]} />
 
-        <ambientLight intensity={weatherMode === "sunset" ? 1.2 : 0.6} />
-        <directionalLight position={[8, 14, 6]} intensity={weatherMode === "sunset" ? 3.5 : 2.2} color={weatherMode === "sunset" ? "#ffaa55" : "#ffffff"} castShadow />
-        <pointLight position={[0, 5, 0]} intensity={7} color={weatherMode === "rain" ? "#0088ff" : "#00ffff"} />
+        {weatherMode === "rain" && (
+          <fog attach="fog" args={['#061122', 4, 18]} />
+        )}
+        {weatherMode === "night" && (
+          <fog attach="fog" args={['#020409', 8, 28]} />
+        )}
 
+        <Environment preset={currentW.envPreset} />
+
+        {/* Weather-Specific Dynamic Lighting */}
+        {weatherMode === "sunset" ? (
+          <>
+            <ambientLight intensity={1.8} color="#e0f2fe" />
+            <directionalLight position={[12, 20, 8]} intensity={4.5} color="#fffbeb" castShadow />
+            <directionalLight position={[-8, 10, -6]} intensity={1.2} color="#7dd3fc" />
+          </>
+        ) : weatherMode === "rain" ? (
+          <>
+            <ambientLight intensity={0.5} color="#38bdf8" />
+            <directionalLight position={[6, 12, 4]} intensity={1.8} color="#93c5fd" castShadow />
+            <pointLight position={[0, 4, 0]} intensity={8} color="#00f3ff" />
+            <LightningEffect />
+          </>
+        ) : (
+          <>
+            {/* NIGHT MODE: Stadium Corner Floodlights & High Contrast Neon */}
+            <ambientLight intensity={0.25} color="#0f172a" />
+            <directionalLight position={[8, 16, 6]} intensity={2.8} color="#38bdf8" castShadow />
+            <spotLight position={[6, 8, 6]} angle={0.6} penumbra={0.5} intensity={12} color="#00f3ff" />
+            <spotLight position={[-6, 8, -6]} angle={0.6} penumbra={0.5} intensity={12} color="#ff0055" />
+          </>
+        )}
+
+        {/* Ground Grid */}
         <Grid
           position={[0, -0.01, 0]}
-          args={[22, 22]}
+          args={[24, 24]}
           cellSize={0.5}
           cellThickness={0.5}
-          cellColor="#1e293b"
+          cellColor={weatherMode === "sunset" ? "#334155" : "#1e293b"}
           sectionSize={2.5}
           sectionThickness={1}
-          sectionColor={gridColor}
-          fadeDistance={16}
+          sectionColor={currentW.gridColor}
+          fadeDistance={18}
         />
+
+        {/* 🌧️ WET REFLECTIVE GROUND PLANE IN RAIN MODE */}
+        {weatherMode === "rain" && (
+          <mesh position={[0, -0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[32, 32]} />
+            <meshStandardMaterial
+              color="#091426"
+              roughness={0.02}
+              metalness={0.96}
+            />
+          </mesh>
+        )}
 
         <Suspense fallback={<CanvasLoader />}>
           {curve && (
             <>
-              <TrackMesh curve={curve} trackColor={trackColor} emissiveColor={emissiveColor} glowColor={glowColor} />
+              <TrackMesh curve={curve} trackColor={trackColor} emissiveColor={emissiveColor} glowColor={glowColor} weatherMode={weatherMode} />
+              
               <MovingCar 
                 curve={curve} 
                 isPlaying={isPlaying} 
@@ -503,14 +648,23 @@ export default function TrackCanvas3D({
                 liveryColor={teamsMap[selectedTeam].color} 
                 cameraMode={cameraMode}
                 controlsRef={controlsRef}
+                weatherMode={weatherMode}
               />
+
               <CornerWaypoints curve={curve} corners={cornersList} />
+
+              {/* 🌧️ Rain Drop Particles in Rain Mode */}
+              {weatherMode === "rain" && <RainParticles count={1000} />}
             </>
           )}
         </Suspense>
 
         <EffectComposer>
-          <Bloom intensity={1.6} luminanceThreshold={0.15} luminanceSmoothing={0.9} />
+          <Bloom 
+            intensity={weatherMode === "night" ? 2.2 : weatherMode === "rain" ? 1.6 : 0.8} 
+            luminanceThreshold={0.15} 
+            luminanceSmoothing={0.9} 
+          />
         </EffectComposer>
       </Canvas>
     </div>
